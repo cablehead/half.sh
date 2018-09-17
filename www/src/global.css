@@ -1,0 +1,45 @@
+body {
+  font-family: 'Inconsolata';
+  font-size: 10pt;
+  color: #333;
+  margin: 2px;
+  background: #938581;
+}
+
+.node {
+  margin-bottom: 2px;
+  margin-right: 2px;
+  background: yellow;
+  max-width: 82ch;
+}
+
+.node.selected {
+  /* box-shadow: 0 4px 8px 0 rgba(0,0,0,0.28); */
+}
+
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+  padding: 2px;
+  background: #fefefe;
+  padding: 2px;
+  max-width: 82ch;
+  max-height: 40ch;
+  overflow: auto;
+}
+
+pre.command {
+  background-color: #659bb6;
+  color: #eee;
+}
+
+.selected pre.command {
+  background-color: #5FAD56;
+  transition: 0.2s;
+}
+
+.row {
+  display: flex;
+}
+
