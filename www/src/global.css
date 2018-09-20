@@ -43,3 +43,20 @@ pre.command {
   display: flex;
 }
 
+.starred {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  opacity: 0.9;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #F2C14E;
+  justify-content: center;
+}
+
+.starred pre {
+  background: #7E6551;
+  color: #eee;
+}
+

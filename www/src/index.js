@@ -7,18 +7,15 @@ import ReactDOM from 'react-dom'
 
 
 function scrollTo(element, top, left, duration) {
-
     var increment = 20
 
     var state = {
       currentTime: 0,
-
       top: {
         start: element.scrollTop,
         change: top - element.scrollTop,
         currentTime: 0,
       },
-
       left: {
         start: element.scrollLeft,
         change: left - element.scrollLeft,
@@ -42,6 +39,7 @@ function scrollTo(element, top, left, duration) {
     };
     animateScroll();
 }
+
 
 var Motion = {
   // no easing, no acceleration
@@ -89,6 +87,8 @@ class Main extends Component {
     super(props);
     this.state = {
       selected: '',
+      seeds: [],
+      starred: [],
       tree: {},
       values: {},
     }
@@ -127,6 +127,9 @@ class Main extends Component {
 
   componentDidUpdate() {
     var el = document.querySelector('.selected')
+    if (!el) return
+    if (el == this.prev_selected) return
+    this.prev_selected = el
     scrollTo(
       window.document.body,
       (el.offsetTop - el.scrollTop + el.clientTop) - 100,
@@ -135,11 +138,32 @@ class Main extends Component {
   }
 
   render() {
-    return <Bar
-      tree={ this.state.tree }
-      values={ this.state.values }
-      selected={ this.state.selected }
-      node="out" />
+    return <div>
+      { (this.state.starred.length > 0) &&
+        <div className="starred">
+        {
+          this.state.starred.map(
+            (x) => <div key={x}><div className="node">
+              <pre><code>
+                { atob(this.state.values[x].out).trim() }
+              </code></pre>
+            </div></div>)
+        }
+        </div>
+      }
+
+      <div className="row">
+        {
+          this.state.seeds.map((x) => <Bar
+            key={x}
+            tree={ this.state.tree }
+            values={ this.state.values }
+            selected={ this.state.selected }
+            node={ x } />
+          )
+        }
+      </div>
+    </div>
   }
 }
 
@@ -178,5 +202,3 @@ ReactDOM.render(
   <Main />,
   document.getElementById('app')
 )
-
-
