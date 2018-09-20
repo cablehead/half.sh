@@ -50,6 +50,7 @@ pre.command {
   opacity: 0.9;
   position: fixed;
   bottom: 0;
+  left: 0;
   width: 100%;
   background: #F2C14E;
   justify-content: center;
@@ -59,4 +60,3 @@ pre.command {
   background: #7E6551;
   color: #eee;
 }
-
