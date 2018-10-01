@@ -4,11 +4,13 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "build-dev": "rm -f dist/* && webpack --mode development && open -g http://localhost:8000 || echo ERROR"
+    "build-dev": "rm -f dist/build-*.js && webpack --mode development ; open -g http://localhost:8000"
   },
   "dependencies": {
     "react": "^16.5.2",
-    "react-dom": "^16.5.2"
+    "react-dom": "^16.5.2",
+    "styled-components": "^3.4.9",
+    "styled-reset": "^1.5.1"
   },
   "devDependencies": {
     "@babel/core": "^7.1.1",

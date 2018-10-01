@@ -11,6 +11,8 @@ module.exports = {
         exclude: /node_modules/,
         enforce: 'pre',
         options: {
+          formatter: require("eslint/lib/formatters/codeframe"),
+          color: false,
           emitError: true,
           failOnError: true
         },
