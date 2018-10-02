@@ -29,7 +29,7 @@ def main(a):
     x = a and a.pop(0)
 
     if x:
-        print(json.dumps({'n': {x: node(os.path.join(P, x))}}))
+        print(json.dumps({'node': {x: {'$set': node(os.path.join(P, x))}}}))
         return
 
     D = {
@@ -48,7 +48,7 @@ def main(a):
             parent = os.path.basename(os.path.dirname(stdin))
             D['tree'].setdefault(parent, []).append(x)
 
-    print(json.dumps({'i': D}))
+    print(json.dumps({'$set': D}))
 
 
 main(sys.argv[1:])

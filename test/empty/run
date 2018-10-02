@@ -25,5 +25,12 @@ chmod +x P/node/$ID/run
 ln -s ../$PARENT/stdout P/node/$ID/stdin
 $BIN/run P $ID
 
-sleep 2
+find -L . -samefile P/node/$PARENT/stdout -name "*stdin" | \
+  xargs dirname | \
+  xargs basename | \
+  jq --argjson parent "$PARENT" -s -c '
+    {"tree": {($parent | tostring): {"$set": map(tostring)}}}' >> P/stream
+
+
+sleep 100
 echo finished

@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 
+import update from 'immutability-helper'
+
 import styled from 'styled-components'
 import { injectGlobal, css } from 'styled-components'
 
@@ -90,12 +92,7 @@ class Main extends Component {
 
       ws.onmessage = function (event) {
         var data = JSON.parse(event.data)
-        if ('i' in data) {
-          self.setState(data['i'])
-        }
-        else if ('n' in data) {
-          self.setState({node: {...self.state.node, ...data['n']} })
-        }
+        self.setState(update(self.state, data))
       }
 
       ws.onclose = function(event) {
