@@ -56,7 +56,14 @@ $PAUSE
 $BIN/select P $PARENT
 echo ls -l > P/node/$PARENT/run
 
-sleep 2
+$PAUSE
+$BIN/select P $ID
+$PAUSE
+$BIN/select P $PARENT
+$PAUSE
+$BIN/select P $ID
+
+sleep 1
 open -g http://localhost:8000
 
 sleep 100
