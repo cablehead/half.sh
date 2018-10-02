@@ -14,8 +14,23 @@ def read_as_b64(path, name):
     return base64.b64encode(read(path, name)).decode()
 
 
-def main():
-    P = sys.argv[1]
+def node(base):
+    return {
+        'run': read_as_b64(base, 'run'),
+        'stdout': read_as_b64(base, 'stdout'),
+        'stderr': read_as_b64(base, 'stderr'),
+        'exitcode': int(read(base, 'exitcode')),
+        }
+
+
+def main(a):
+    base = a.pop(0)
+    P = os.path.join(base, 'node')
+    x = a and a.pop(0)
+
+    if x:
+        print(json.dumps({'n': {x: node(os.path.join(P, x))}}))
+        return
 
     D = {
         'root': [],
@@ -25,14 +40,7 @@ def main():
 
     for x in os.listdir(P):
         base = os.path.join(P, x)
-
-        D['node'][x] = {
-            'run': read_as_b64(base, 'run'),
-            'stdout': read_as_b64(base, 'stdout'),
-            'stderr': read_as_b64(base, 'stderr'),
-            'exitcode': int(read(base, 'exitcode')),
-            }
-
+        D['node'][x] = node(base)
         stdin = os.path.realpath(os.path.join(base, 'stdin'))
         if stdin == '/dev/null':
             D['root'].append(x)
@@ -40,7 +48,7 @@ def main():
             parent = os.path.basename(os.path.dirname(stdin))
             D['tree'].setdefault(parent, []).append(x)
 
-    print(json.dumps(D))
+    print(json.dumps({'i': D}))
 
 
-main()
+main(sys.argv[1:])

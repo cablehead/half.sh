@@ -81,8 +81,13 @@ class Main extends Component {
       }
 
       ws.onmessage = function (event) {
-        var state = JSON.parse(event.data)
-        self.setState(state)
+        var data = JSON.parse(event.data)
+        if ('i' in data) {
+          self.setState(data['i'])
+        }
+        else if ('n' in data) {
+          self.setState({node: {...self.state.node, ...data['n']} })
+        }
       }
 
       ws.onclose = function(event) {

@@ -1,0 +1,9 @@
+BIN=$(dirname $0)
+
+cd $1/node/$2
+cat stdin | ./run 1>stdout 2>stderr
+echo $? > exitcode
+
+cd - > /dev/null
+
+$BIN/tree $1 $2 >> $1/stream
