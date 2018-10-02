@@ -28,8 +28,9 @@ $PAUSE
 $BIN/select P up
 echo ls -l | $BIN/cat P
 
-
+$PAUSE
 $BIN/select P down
+
 sleep 1
 open -g http://localhost:8000
 
