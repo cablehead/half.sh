@@ -6,6 +6,15 @@ import { injectGlobal, css } from 'styled-components'
 
 import { reset } from 'styled-reset'
 
+
+const theme = {
+  blue: '#659BB6',
+  lightbrown: '#938581',
+  green: '#5FAD56',
+  red: '#F24D4D',
+}
+
+
 injectGlobal`
   ${reset}
   body {
@@ -13,7 +22,7 @@ injectGlobal`
     font-size: 10pt;
     color: #333;
     margin: 2px;
-    background: #938581;
+    background: ${theme.lightbrown};
   }
 `
 
@@ -32,26 +41,25 @@ const Pre = styled.pre`
     props.exitcode == 0
       && css`
         color: #eee;
-        background: #5FAD56;
+        background: ${theme.blue};
       `
       || css`
         color: #eee;
-        background: #F24D4D;
+        background: ${theme.red};
       `) }
 `
 
 
 class Node extends Component {
   render() {
-    let { run, stdout, exitcode } = this.props.data.node[this.props.node]
+    let { run, stdout, stderr, exitcode } = this.props.data.node[this.props.node]
     return <div>
       <div>
         <Pre exitcode={ exitcode }>
           { atob(run).trim() }
         </Pre>
-        <Pre>
-          { atob(stdout).trim() }
-        </Pre>
+        { stderr != "" && <Pre>{ atob(stderr).trim() }</Pre> }
+        { stdout != "" && <Pre>{ atob(stdout).trim() }</Pre> }
       </div>
       { (this.props.data.tree[this.props.node] || []).map(
         (x) => <Node key={ x } node={ x } data={ this.props.data } /> ) }

@@ -9,3 +9,8 @@ echo $? > exitcode
 cd - > /dev/null
 
 $BIN/tree $1 $2 >> $1/stream
+
+# run dependent nodes
+for X in $(find -L . -samefile $1/node/$2/stdout -name stdin); do
+  $BIN/run $1 $(basename $(dirname $X))
+done
