@@ -16,7 +16,7 @@ ln -s /dev/null P/node/$ID/stdin
 $BIN/run P $ID
 
 # pipe to a new node
-sleep 1
+$PAUSE
 PARENT=$ID
 ID=$($BIN/i P)
 mkdir -p P/node/$ID
@@ -31,6 +31,16 @@ find -L . -samefile P/node/$PARENT/stdout -name "*stdin" | \
   jq --argjson parent "$PARENT" -s -c '
     {"tree": {($parent | tostring): {"$set": map(tostring)}}}' >> P/stream
 
+$BIN/watch P $ID &
+$PAUSE
+echo wc > P/node/$ID/run
+$PAUSE
+echo wc -l > P/node/$ID/run
+kill %%
+
+$BIN/watch P $PARENT &
+$PAUSE
+echo ls -l > P/node/$PARENT/run
 
 sleep 100
 echo finished

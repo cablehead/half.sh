@@ -2,6 +2,5 @@
 
 BIN=$(dirname $0)
 
-
 ls $1/node/$2/run
 watchexec -d 20 -w $1/node/$2/run -- $BIN/run $1 $2

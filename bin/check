@@ -11,6 +11,8 @@ export TMPDIR=$(mktemp -d)
 
 export HSH_TRAP=1
 
+export PAUSE="sleep 0.5"
+
 trap "rm -rf $TMPDIR" EXIT
 trap "exit" INT TERM
 trap "kill 0" EXIT
