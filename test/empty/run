@@ -53,10 +53,11 @@ kill %%
 
 $BIN/watch P $PARENT &
 $PAUSE
-jq --argjson id $PARENT -n -c '{
-  "selected": {"$set": ($id | tostring)}
-}' >> P/stream
+$BIN/select P $PARENT
 echo ls -l > P/node/$PARENT/run
+
+sleep 2
+open -g http://localhost:8000
 
 sleep 100
 echo finished

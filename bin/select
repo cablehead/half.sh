@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+set -u
+
+echo $2 > $1/selected
+
+jq --argjson id $2 -n -c '{
+  "selected": {"$set": ($id | tostring)}
+}' >> $1/stream
