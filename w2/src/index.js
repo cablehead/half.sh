@@ -28,8 +28,8 @@ const Pre = styled.pre`
   max-height: 40ch;
   overflow: auto;
 
-  ${props => ('exit_status' in props) && (
-    props.exit_status == 0
+  ${props => ('exitcode' in props) && (
+    props.exitcode == 0
       && css`
         color: #eee;
         background: #5FAD56;
@@ -41,12 +41,29 @@ const Pre = styled.pre`
 `
 
 
+class Node extends Component {
+  render() {
+    let { run, stdout, exitcode } = this.props.data.node[this.props.node]
+    return <div>
+      <div>
+        <Pre exitcode={ exitcode }>
+          { atob(run).trim() }
+        </Pre>
+        <Pre>
+          { atob(stdout).trim() }
+        </Pre>
+      </div>
+      { (this.props.data.tree[this.props.node] || []).map(
+        (x) => <Node key={ x } node={ x } data={ this.props.data } /> ) }
+    </div>
+  }
+}
+
 class Main extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      loaded: false,
-      node: {},
+      root: [],
     }
   }
 
@@ -64,14 +81,14 @@ class Main extends Component {
       }
 
       ws.onmessage = function (event) {
-        var node = JSON.parse(event.data)
-        self.setState({loaded: true, node: node})
+        var state = JSON.parse(event.data)
+        self.setState(state)
       }
 
       ws.onclose = function(event) {
         console.log('close', event)
         ws = null
-        setTimeout(reconnect, 1000)
+        // setTimeout(reconnect, 1000)
       }
     }
     reconnect()
@@ -82,16 +99,9 @@ class Main extends Component {
   }
 
   render() {
-    if (!this.state.loaded) return <div><Pre>...</Pre></div>
-    let { command, out, exit_status } = this.state.node
-    return <div>
-      <Pre exit_status={ exit_status }>
-        { command }
-      </Pre>
-      <Pre>
-        { atob(out).trim() }
-      </Pre>
-    </div>
+    if (!this.state.root.length) return <div><Pre>...</Pre></div>
+    let { root, node } = this.state
+    return <Node data={ this.state } node={ root[0] } />
   }
 }
 
