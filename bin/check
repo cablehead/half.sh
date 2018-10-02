@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+set -u
+
+T=$1
+
+export BIN=$(realpath $(dirname $0))
+
+export TMPDIR=$(mktemp -d)
+
+export HSH_TRAP=1
+
+trap "rm -rf $TMPDIR" EXIT
+trap "exit" INT TERM
+trap "kill 0" EXIT
+
+$T/run
