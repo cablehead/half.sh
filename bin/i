@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+
+import socket
+import signal
+import atexit
+import sys
+import os
+
+import fity3
+
+
+def serve(name):
+    f3 = fity3.generator(1)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(('localhost', 0))
+    _, port = sock.getsockname()
+
+    open(name, 'w').write(str(port))
+    atexit.register(lambda: os.unlink(name))
+
+    def sigint_handler(signal, frame):
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, sigint_handler)
+    signal.signal(signal.SIGTERM, sigint_handler)
+
+    while True:
+        data, addr = sock.recvfrom(1024)
+        n = str(next(f3))
+        sock.sendto(n.encode(), addr)
+
+
+def main(a):
+    name = os.path.join(a[0], 'flake')
+
+    if len(a) > 1:
+        serve(name)
+
+    port = int(open(name).read())
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(('localhost', 0))
+    sock.sendto(b'', ('localhost', port))
+    b, _ = sock.recvfrom(128)
+    sys.stdout.buffer.write(b)
+
+
+main(sys.argv[1:])

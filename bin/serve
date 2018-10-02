@@ -1,4 +1,15 @@
 #!/bin/bash
 
-websocketd --staticdir=w2/dist --port 8000 \
-    sh -c "(bin/tree $1; tail -n0 -F $1/stream)"
+
+BIN=$(dirname $0)
+
+if [[ -z "$HSH_TRAP" ]] ; then
+    echo "setting trap"
+    trap "exit" INT TERM
+    trap "kill 0" EXIT
+fi
+
+$BIN/i $1 serve &
+
+websocketd --staticdir=$(dirname $0)/../w2/dist --port 8000 \
+    sh -c "($BIN/tree $1; tail -n0 -F $1/stream)"
