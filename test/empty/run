@@ -15,11 +15,16 @@ echo echo Hello, world. > P/node/$ID/run
 chmod +x P/node/$ID/run
 ln -s /dev/null P/node/$ID/stdin
 $BIN/run P $ID
+echo $ID > P/selected
+
 find -L . -samefile /dev/null -name "*stdin" | \
   xargs dirname | \
   xargs basename | \
-  jq -s -c '
-    {"root": {"$set": map(tostring)}}' >> P/stream
+  jq --argjson id $ID -s -c '{
+    "root": {"$set": map(tostring)},
+    "selected": {"$set": ($id | tostring)}
+  }' >> P/stream
+
 
 # pipe to a new node
 $PAUSE
@@ -34,8 +39,10 @@ $BIN/run P $ID
 find -L . -samefile P/node/$PARENT/stdout -name "*stdin" | \
   xargs dirname | \
   xargs basename | \
-  jq --argjson parent "$PARENT" -s -c '
-    {"tree": {($parent | tostring): {"$set": map(tostring)}}}' >> P/stream
+  jq --argjson id $ID --argjson parent $PARENT -s -c '{
+    "tree": {($parent | tostring): {"$set": map(tostring)}},
+    "selected": {"$set": ($id | tostring)}
+  }' >> P/stream
 
 $BIN/watch P $ID &
 $PAUSE
@@ -46,6 +53,9 @@ kill %%
 
 $BIN/watch P $PARENT &
 $PAUSE
+jq --argjson id $PARENT -n -c '{
+  "selected": {"$set": ($id | tostring)}
+}' >> P/stream
 echo ls -l > P/node/$PARENT/run
 
 sleep 100

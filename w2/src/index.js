@@ -39,16 +39,23 @@ const Pre = styled.pre`
   max-height: 40ch;
   overflow: auto;
 
-  ${props => ('exitcode' in props) && (
-    props.exitcode == 0
-      && css`
-        color: #eee;
-        background: ${theme.blue};
-      `
-      || css`
-        color: #eee;
-        background: ${theme.red};
-      `) }
+  ${props => {
+    if (!('exitcode' in props)) return
+
+    if (props.selected) return css`
+      color: #eee;
+      background: ${theme.green};
+    `
+
+    if (props.exitcode == 0) return css`
+      color: #eee;
+      background: ${theme.blue};
+    `
+    return css`
+      color: #eee;
+      background: ${theme.red};
+    `
+    }}
 `
 
 
@@ -57,7 +64,10 @@ class Node extends Component {
     let { run, stdout, stderr, exitcode } = this.props.data.node[this.props.node]
     return <div>
       <div>
-        <Pre exitcode={ exitcode }>
+        <Pre
+          selected={ this.props.node==this.props.data.selected }
+          exitcode={ exitcode }
+        >
           { atob(run).trim() }
         </Pre>
         { stderr != "" && <Pre>{ atob(stderr).trim() }</Pre> }
@@ -92,7 +102,10 @@ class Main extends Component {
 
       ws.onmessage = function (event) {
         var data = JSON.parse(event.data)
+        console.log(data)
         self.setState(update(self.state, data))
+
+        console.log(self.state)
       }
 
       ws.onclose = function(event) {
