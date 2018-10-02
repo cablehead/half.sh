@@ -101,7 +101,7 @@ class Main extends Component {
       ws.onclose = function(event) {
         console.log('close', event)
         ws = null
-        // setTimeout(reconnect, 1000)
+        setTimeout(reconnect, 1000)
       }
     }
     reconnect()
