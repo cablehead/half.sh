@@ -1,2 +1,4 @@
+#!/bin/bash
+
 websocketd --staticdir=w2/dist --port 8000 \
     sh -c "(bin/tree $1; tail -n0 -F $1/stream)"
