@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+set -u
+
+BIN=$(dirname $0)
+
+[[ $# -eq 2 ]] && ID=$2 || ID=$(cat $1/selected)
+
+cat > $1/node/$ID/run
+$BIN/run $1 $ID

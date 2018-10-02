@@ -8,61 +8,28 @@ sh -c "$BIN/serve P &"
 open -g http://localhost:8000
 sleep 1
 
-# make a root node
-ID=$($BIN/i P)
-mkdir -p P/node/$ID
-echo echo Hello, world. > P/node/$ID/run
-chmod +x P/node/$ID/run
-ln -s /dev/null P/node/$ID/stdin
-$BIN/run P $ID
-echo $ID > P/selected
-
-find -L . -samefile /dev/null -name "*stdin" | \
-  xargs dirname | \
-  xargs basename | \
-  jq --argjson id $ID -s -c '{
-    "root": {"$set": map(tostring)},
-    "selected": {"$set": ($id | tostring)}
-  }' >> P/stream
-
-
-# pipe to a new node
-$PAUSE
-PARENT=$ID
-ID=$($BIN/i P)
-mkdir -p P/node/$ID
-echo cat > P/node/$ID/run
-chmod +x P/node/$ID/run
-ln -s ../$PARENT/stdout P/node/$ID/stdin
-$BIN/run P $ID
-
-find -L . -samefile P/node/$PARENT/stdout -name "*stdin" | \
-  xargs dirname | \
-  xargs basename | \
-  jq --argjson id $ID --argjson parent $PARENT -s -c '{
-    "tree": {($parent | tostring): {"$set": map(tostring)}},
-    "selected": {"$set": ($id | tostring)}
-  }' >> P/stream
-
-$BIN/watch P $ID &
-$PAUSE
-echo wc > P/node/$ID/run
-$PAUSE
-echo wc -l > P/node/$ID/run
-kill %%
-
-$BIN/watch P $PARENT &
-$PAUSE
-$BIN/select P $PARENT
-echo ls -l > P/node/$PARENT/run
+$BIN/insert P
+$BIN/select P up    # nowhere to go
 
 $PAUSE
-$BIN/select P $ID
+$BIN/pipe P
+$BIN/select P down  # nowhere to go
 $PAUSE
-$BIN/select P $PARENT
+$BIN/select P up
 $PAUSE
-$BIN/select P $ID
+$BIN/select P down
 
+$PAUSE
+echo wc | $BIN/cat P
+$PAUSE
+echo wc -l | $BIN/cat P
+
+$PAUSE
+$BIN/select P up
+echo ls -l | $BIN/cat P
+
+
+$BIN/select P down
 sleep 1
 open -g http://localhost:8000
 

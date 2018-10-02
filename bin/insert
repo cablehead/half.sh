@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -e
+set -u
+
+ID=$($BIN/i $1)
+mkdir -p $1/node/$ID
+echo echo Hello, world. > $1/node/$ID/run
+chmod +x $1/node/$ID/run
+ln -s /dev/null $1/node/$ID/stdin
+$BIN/run $1 $ID
+
+echo $ID > $1/selected
+find -L . -samefile /dev/null -name "*stdin" | \
+  xargs dirname | \
+  xargs basename | \
+  jq --argjson id $ID -s -c '{
+    "root": {"$set": map(tostring)},
+    "selected": {"$set": ($id | tostring)}
+  }' >> $1/stream

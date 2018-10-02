@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -e
+set -u
+
+[[ $# -eq 2 ]] && PARENT=$2 || PARENT=$(cat $1/selected)
+
+ID=$($BIN/i P)
+mkdir -p P/node/$ID
+echo cat > P/node/$ID/run
+chmod +x P/node/$ID/run
+ln -s ../$PARENT/stdout P/node/$ID/stdin
+$BIN/run P $ID
+
+echo $ID > $1/selected
+find -L . -samefile P/node/$PARENT/stdout -name "*stdin" | \
+  xargs dirname | \
+  xargs basename | \
+  jq --argjson id $ID --argjson parent $PARENT -s -c '{
+    "tree": {($parent | tostring): {"$set": map(tostring)}},
+    "selected": {"$set": ($id | tostring)}
+  }' >> P/stream

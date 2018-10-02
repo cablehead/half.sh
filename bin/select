@@ -3,8 +3,31 @@
 set -e
 set -u
 
-echo $2 > $1/selected
 
-jq --argjson id $2 -n -c '{
+S=$(cat $1/selected)
+T=$S
+
+case $2 in
+"up")
+    P=$(realpath $1/node/$S/stdin)
+    if [[ "$P" == "/dev/null" ]] ; then exit ; fi
+    T=$(basename $(dirname $P))
+    ;;
+"down")
+    T=$(
+      find -L . -samefile $1/node/$S/stdout -name "*stdin" | \
+      xargs dirname | \
+      xargs basename | \
+      head -n 1)
+    if [[ -z $T ]] ; then exit ; fi
+    ;;
+*)
+    T=$2
+    ;;
+esac
+
+echo $T > $1/selected
+
+jq --argjson id $T -n -c '{
   "selected": {"$set": ($id | tostring)}
 }' >> $1/stream
