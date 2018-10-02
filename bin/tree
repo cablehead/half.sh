@@ -26,8 +26,18 @@ def node(base):
 def main(a):
     base = a.pop(0)
     P = os.path.join(base, 'node')
-    x = a and a.pop(0)
 
+    D = {
+        'root': [],
+        'node': {},
+        'tree': {},
+        }
+
+    if not os.path.exists(P):
+        print(json.dumps({'$set': D}))
+        return
+
+    x = a and a.pop(0)
     if x:
         print(json.dumps({'node': {x: {'$set': node(os.path.join(P, x))}}}))
         return

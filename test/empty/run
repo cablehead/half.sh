@@ -2,10 +2,11 @@
 
 cd $TMPDIR
 mkdir P
+touch P/stream
 
 sh -c "$BIN/serve P &"
-sleep 0.5
 open -g http://localhost:8000
+sleep 1
 
 # make a root node
 ID=$($BIN/i P)
@@ -14,6 +15,11 @@ echo echo Hello, world. > P/node/$ID/run
 chmod +x P/node/$ID/run
 ln -s /dev/null P/node/$ID/stdin
 $BIN/run P $ID
+find -L . -samefile /dev/null -name "*stdin" | \
+  xargs dirname | \
+  xargs basename | \
+  jq -s -c '
+    {"root": {"$set": map(tostring)}}' >> P/stream
 
 # pipe to a new node
 $PAUSE
