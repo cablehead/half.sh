@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+
+import base64
+import json
+import sys
+import os
+
+
+def read(path, name):
+    return open(os.path.join(path, name), 'rb').read()[:2000].strip()
+
+
+def read_as_b64(path, name):
+    return base64.b64encode(read(path, name)).decode()
+
+
+def main():
+    P = sys.argv[1]
+
+    D = {
+        'root': [],
+        'node': {},
+        'tree': {},
+        }
+
+    for x in os.listdir(P):
+        base = os.path.join(P, x)
+
+        D['node'][x] = {
+            'run': read_as_b64(base, 'run'),
+            'stdout': read_as_b64(base, 'stdout'),
+            'stderr': read_as_b64(base, 'stderr'),
+            'exitcode': int(read(base, 'exitcode')),
+            }
+
+        stdin = os.path.realpath(os.path.join(base, 'stdin'))
+        if stdin == '/dev/null':
+            D['root'].append(x)
+        else:
+            parent = os.path.basename(os.path.dirname(stdin))
+            D['tree'].setdefault(parent, []).append(x)
+
+    print(json.dumps(D))
+
+
+main()
