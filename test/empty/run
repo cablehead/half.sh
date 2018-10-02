@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 cd $TMPDIR
 mkdir P
 
@@ -8,16 +7,23 @@ sh -c "$BIN/serve P &"
 sleep 0.5
 open -g http://localhost:8000
 
-
+# make a root node
 ID=$($BIN/i P)
-
 mkdir -p P/node/$ID
 echo echo Hello, world. > P/node/$ID/run
 chmod +x P/node/$ID/run
 ln -s /dev/null P/node/$ID/stdin
-
 $BIN/run P $ID
 
+# pipe to a new node
+sleep 1
+PARENT=$ID
+ID=$($BIN/i P)
+mkdir -p P/node/$ID
+echo cat > P/node/$ID/run
+chmod +x P/node/$ID/run
+ln -s ../$PARENT/stdout P/node/$ID/stdin
+$BIN/run P $ID
 
 sleep 2
 echo finished
