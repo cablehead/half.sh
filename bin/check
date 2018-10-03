@@ -38,5 +38,7 @@ if [[ $# -gt 1 ]] ; then
   exit
 fi
 
+rm -f /tmp/P
+ln -s $TMPDIR/P /tmp/P
 echo finished.
 sleep 10000

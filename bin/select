@@ -18,10 +18,22 @@ case $2 in
     T=$($BIN/dependson $1 $1/node/$S/stdout | head -n 1)
     if [[ -z $T ]] ; then exit ; fi
     ;;
+"up")
+    T=$($BIN/dependson $1 $(realpath $1/node/$S/stdin) | \
+        grep -B 1 $S | grep -v $S)
+    if [[ -z $T ]] ; then exit ; fi
+    ;;
+"down")
+    T=$($BIN/dependson $1 $(realpath $1/node/$S/stdin) | \
+        grep -A 1 $S | grep -v $S)
+    if [[ -z $T ]] ; then exit ; fi
+    ;;
 *)
     T=$2
     ;;
 esac
+
+echo "CHANGE $S -> $T"
 
 echo $T > $1/selected
 

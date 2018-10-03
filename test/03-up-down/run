@@ -1,1 +1,24 @@
 #!/bin/bash
+
+$BIN/select P down  # nothing
+$BIN/select P up  # nothing
+
+$BIN/select P left
+$BIN/select P up
+
+$BIN/select P up  # nothing
+
+$BIN/select P left
+$BIN/select P up
+$BIN/select P right
+$BIN/select P right
+$BIN/select P down
+
+$BIN/select P up
+$BIN/select P left
+
+$BIN/select P left
+$BIN/select P down
+$BIN/select P right
+$BIN/select P down
+$BIN/select P right
