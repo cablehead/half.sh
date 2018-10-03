@@ -33,8 +33,6 @@ case $2 in
     ;;
 esac
 
-echo "CHANGE $S -> $T"
-
 echo $T > $1/selected
 
 jq --argjson id $T -n -c '{
