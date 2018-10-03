@@ -32,6 +32,9 @@ while true ; do
     "|")
         $BIN/pipe $1
         ;;
+    " ")
+        $BIN/run $1
+        ;;
     $'\n')
         $BIN/watch $1 &
         vi $1/node/$S/run

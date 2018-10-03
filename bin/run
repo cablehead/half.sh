@@ -1,16 +1,21 @@
 #!/bin/bash
 
+set -e
+set -u
+
 BIN=$(dirname $0)
 
-cd $1/node/$2
+[[ $# -eq 2 ]] && ID=$2 || ID=$(cat $1/selected)
+
+cd $1/node/$ID
 cat stdin | ./run 1>stdout 2>stderr
 echo $? > exitcode
 
 cd - > /dev/null
 
-$BIN/tree $1 $2 >> $1/stream
+$BIN/tree $1 $ID >> $1/stream
 
 # run dependent nodes
-for X in $($BIN/dependson $1 $1/node/$2/stdout); do
+for X in $($BIN/dependson $1 $1/node/$ID/stdout); do
   $BIN/run $1 $X
 done
