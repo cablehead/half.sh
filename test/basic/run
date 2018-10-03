@@ -5,13 +5,23 @@ cd $TMPDIR
 
 sh -c "$BIN/serve P &"
 open -g http://localhost:8000
-sleep 1
+sleep 0.5
 
 $BIN/pipe P
 echo "jq '. * 2'" | $BIN/cat P
 
+$BIN/select P left
+$BIN/pipe P
+echo "jq '. + 2'" | $BIN/cat P
+
 $BIN/insert P
 $BIN/pipe P
 echo sed s/world/again/ | $BIN/cat P
+
+$BIN/select P left
+$BIN/pipe P
+echo wc -c | $BIN/cat P
+$BIN/pipe P
+echo "jq '. * 2'" | $BIN/cat P
 
 sleep 10000
