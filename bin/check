@@ -30,8 +30,10 @@ sleep 0.5
 
 $T/run
 
+
 # clone this test's results as the start for a new test
 if [[ $# -gt 1 ]] ; then
+  cd - > /dev/null
   mkdir -p test/$2
   cp -a $TMPDIR/P test/$2/
   echo copied.
