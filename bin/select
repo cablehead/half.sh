@@ -9,12 +9,12 @@ S=$(cat $1/selected)
 T=$S
 
 case $2 in
-"up")
+"left")
     P=$(realpath $1/node/$S/stdin)
     if [[ "$P" == "/dev/null" ]] ; then exit ; fi
     T=$(basename $(dirname $P))
     ;;
-"down")
+"right")
     T=$($BIN/dependson $1 $1/node/$S/stdout | head -n 1)
     if [[ -z $T ]] ; then exit ; fi
     ;;

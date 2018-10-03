@@ -9,15 +9,16 @@ open -g http://localhost:8000
 sleep 1
 
 $BIN/insert P
-$BIN/select P up    # nowhere to go
+$BIN/select P left    # nowhere to go
+$BIN/select P right   # nowhere to go
 
 $PAUSE
 $BIN/pipe P
-$BIN/select P down  # nowhere to go
+$BIN/select P right   # nowhere to go
 $PAUSE
-$BIN/select P up
+$BIN/select P left
 $PAUSE
-$BIN/select P down
+$BIN/select P right
 
 $PAUSE
 echo wc | $BIN/cat P
@@ -25,16 +26,11 @@ $PAUSE
 echo wc -l | $BIN/cat P
 
 $PAUSE
-$BIN/select P up
+$BIN/select P left
 echo ls -l | $BIN/cat P
 
 $PAUSE
-$BIN/select P down
+$BIN/select P right
 
-sleep 1
 open -g http://localhost:8000
-
-cp -a P /tmp/NNNN
-
-sleep 100
-echo finished
+sleep 1
