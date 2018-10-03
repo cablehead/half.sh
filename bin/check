@@ -19,5 +19,15 @@ trap "kill 0" EXIT
 
 $T/run
 
+echo FOO $#
+
+# clone this test's results as the start for a new test
+if [[ $# -gt 1 ]] ; then
+  mkdir -p test/$2
+  cp -a $TMPDIR/P test/$2/
+  echo copied.
+  exit
+fi
+
 echo finished.
 sleep 10000
