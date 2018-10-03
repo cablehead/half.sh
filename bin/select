@@ -3,6 +3,7 @@
 set -e
 set -u
 
+export BIN=$(realpath $(dirname $0))
 
 S=$(cat $1/selected)
 T=$S
@@ -14,11 +15,7 @@ case $2 in
     T=$(basename $(dirname $P))
     ;;
 "down")
-    T=$(
-      find -L . -samefile $1/node/$S/stdout -name "*stdin" | \
-      xargs dirname | \
-      xargs basename | \
-      head -n 1)
+    T=$($BIN/dependson $1 $1/node/$S/stdout | head -n 1)
     if [[ -z $T ]] ; then exit ; fi
     ;;
 *)
