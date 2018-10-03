@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cp -a $(dirname $0)/P $TMPDIR
+cd $TMPDIR
+find . -ls
+
+sh -c "$BIN/serve P &"
+open -g http://localhost:8000
+sleep 1
+
+$BIN/insert P
