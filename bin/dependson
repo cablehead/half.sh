@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+set -u
+
+find -L $1/node -samefile $2 -name "stdin" | while read -r line ; do
+   basename $(dirname $line)
+done

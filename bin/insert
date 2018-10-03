@@ -11,9 +11,8 @@ ln -s /dev/null $1/node/$ID/stdin
 $BIN/run $1 $ID
 
 echo $ID > $1/selected
-find -L . -samefile /dev/null -name "*stdin" | \
-  xargs dirname | \
-  xargs basename | \
+
+$BIN/dependson $1 /dev/null | \
   jq --argjson id $ID -s -c '{
     "root": {"$set": map(tostring)},
     "selected": {"$set": ($id | tostring)}

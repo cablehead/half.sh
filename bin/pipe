@@ -13,9 +13,7 @@ ln -s ../$PARENT/stdout P/node/$ID/stdin
 $BIN/run P $ID
 
 echo $ID > $1/selected
-find -L . -samefile P/node/$PARENT/stdout -name "*stdin" | \
-  xargs dirname | \
-  xargs basename | \
+$BIN/dependson $1 P/node/$PARENT/stdout| \
   jq --argjson id $ID --argjson parent $PARENT -s -c '{
     "tree": {($parent | tostring): {"$set": map(tostring)}},
     "selected": {"$set": ($id | tostring)}
