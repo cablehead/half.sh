@@ -4,7 +4,9 @@
 BIN=$(dirname $0)
 
 trap "exit" INT TERM
-trap "kill 0" EXIT
+trap "stty sane; kill 0" EXIT
+
+open -g http://localhost:8000
 
 while true ; do
     IFS= read -s -r -d '' -n 1 K
