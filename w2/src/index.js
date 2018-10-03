@@ -31,7 +31,7 @@ injectGlobal`
 const Pre = styled.pre`
   white-space: pre-wrap;
   word-wrap: break-word;
-  margin: 0;
+  margin-right: 2px;
   padding: 2px;
   background: #fefefe;
   padding: 2px;
@@ -63,6 +63,10 @@ class Node extends Component {
   render() {
     let { run, stdout, stderr, exitcode } = this.props.data.node[this.props.node]
     return <div>
+      <div style={{
+        display: "flex",
+         flexWrap: "nowrap",
+        }}>
       <div>
         <Pre
           selected={ this.props.node==this.props.data.selected }
@@ -73,8 +77,10 @@ class Node extends Component {
         { stderr != "" && <Pre>{ atob(stderr).trim() }</Pre> }
         { stdout != "" && <Pre>{ atob(stdout).trim() }</Pre> }
       </div>
+
       { (this.props.data.tree[this.props.node] || []).map(
         (x) => <Node key={ x } node={ x } data={ this.props.data } /> ) }
+      </div>
     </div>
   }
 }
@@ -124,7 +130,9 @@ class Main extends Component {
   render() {
     if (!this.state.root.length) return <div><Pre>...</Pre></div>
     let { root, node } = this.state
-    return <Node data={ this.state } node={ root[0] } />
+    return <div>{
+      root.map((x) => <Node key={ x } node={ x } data={ this.state } />)
+    }</div>
   }
 }
 
