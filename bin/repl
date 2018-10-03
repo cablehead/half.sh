@@ -1,6 +1,10 @@
 #!/bin/bash
 
+
 BIN=$(dirname $0)
+
+trap "exit" INT TERM
+trap "kill 0" EXIT
 
 while true ; do
     IFS= read -s -r -d '' -n 1 K
@@ -27,6 +31,11 @@ while true ; do
         ;;
     "|")
         $BIN/pipe $1
+        ;;
+    $'\n')
+        $BIN/watch $1 &
+        vi $1/node/$S/run
+        jobs -p | xargs kill
         ;;
     *)
         echo "[$K]"
