@@ -1,0 +1,35 @@
+#!/bin/bash
+
+BIN=$(dirname $0)
+
+while true ; do
+    IFS= read -s -r -d '' -n 1 K
+    S=$(cat $1/selected)
+
+    case $K in
+    "?")
+        echo $S
+        ;;
+    "h")
+        $BIN/select $1 left
+        ;;
+    "l")
+        $BIN/select $1 right
+        ;;
+    "k")
+        $BIN/select $1 up
+        ;;
+    "j")
+        $BIN/select $1 down
+        ;;
+    "I")
+        $BIN/insert $1
+        ;;
+    "|")
+        $BIN/pipe $1
+        ;;
+    *)
+        echo "[$K]"
+        ;;
+    esac
+done

@@ -3,18 +3,20 @@
 set -e
 set -u
 
+BIN=$(dirname $0)
+
 [[ $# -eq 2 ]] && PARENT=$2 || PARENT=$(cat $1/selected)
 
-ID=$($BIN/i P)
-mkdir -p P/node/$ID
-echo cat > P/node/$ID/run
-chmod +x P/node/$ID/run
-ln -s ../$PARENT/stdout P/node/$ID/stdin
-$BIN/run P $ID
+ID=$($BIN/i $1)
+mkdir -p $1/node/$ID
+echo cat > $1/node/$ID/run
+chmod +x $1/node/$ID/run
+ln -s ../$PARENT/stdout $1/node/$ID/stdin
+$BIN/run $1 $ID
 
 echo $ID > $1/selected
-$BIN/dependson $1 P/node/$PARENT/stdout| \
+$BIN/dependson $1 $1/node/$PARENT/stdout| \
   jq --argjson id $ID --argjson parent $PARENT -s -c '{
     "tree": {($parent | tostring): {"$set": map(tostring)}},
     "selected": {"$set": ($id | tostring)}
-  }' >> P/stream
+  }' >> $1/stream
