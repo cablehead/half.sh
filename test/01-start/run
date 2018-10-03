@@ -1,13 +1,5 @@
 #!/bin/bash
 
-cd $TMPDIR
-mkdir P
-touch P/stream
-
-sh -c "$BIN/serve P &"
-open -g http://localhost:8000
-sleep 1
-
 $BIN/insert P
 $BIN/select P left    # nowhere to go
 $BIN/select P right   # nowhere to go

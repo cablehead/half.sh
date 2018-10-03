@@ -1,12 +1,5 @@
 #!/bin/bash
 
-cp -a $(dirname $0)/P $TMPDIR
-cd $TMPDIR
-
-sh -c "$BIN/serve P &"
-open -g http://localhost:8000
-sleep 0.5
-
 $BIN/pipe P
 echo "jq '. * 2'" | $BIN/cat P
 
