@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -e
 set -u
 
 export BIN=$(realpath $(dirname $0))

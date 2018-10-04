@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -e
 set -u
 
 BIN=$(dirname $0)

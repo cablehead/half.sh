@@ -1,0 +1,10 @@
+#!/bin/bash
+
+$BIN/select P left
+$BIN/delete P
+
+$BIN/delete P
+$BIN/select P right
+$BIN/delete P
+
+$BIN/delete P

@@ -37,6 +37,9 @@ while true ; do
     " ")
         $BIN/run $1
         ;;
+    "d")
+        $BIN/delete $1
+        ;;
     $'\n')
         $BIN/watch $1 &
         vi $1/node/$S/run

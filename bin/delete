@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -u
+
+BIN=$(dirname $0)
+
+[[ $# -gt 1 ]] && ID=$2 || ID=$(cat $1/selected)
+
+for X in $($BIN/dependson $1 $1/node/$ID/stdout); do
+  $BIN/delete $1 $X --sub
+done
+
+# if we're about to delete the currently selected node, try and select this
+# node's parent
+if [[ $(cat $1/selected) == $ID ]] ; then
+  P=$(realpath $1/node/$ID/stdin)
+  if [[ "$P" != "/dev/null" ]] ; then
+    echo $(basename $(dirname $P)) > $1/selected
+  else
+    $BIN/dependson $1 /dev/null | grep -C 1 $ID | grep -v $ID > $1/selected
+  fi
+fi
+
+rm -rf $1/node/$ID
+
+if [[ $# -lt 2 ]] ; then
+  $BIN/tree $1 >> $1/stream
+fi
