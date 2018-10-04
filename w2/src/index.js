@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 
+import ScrollIntoViewIfNeeded from 'react-scroll-into-view-if-needed'
+
 import update from 'immutability-helper'
 
 import styled from 'styled-components'
@@ -60,7 +62,9 @@ const Pre = styled.pre`
 class Node extends Component {
   render() {
     let { run, stdout, stderr, exitcode } = this.props.data.node[this.props.node]
-    return <div>
+    return <ScrollIntoViewIfNeeded
+        active={ this.props.node==this.props.data.selected }>
+      <div>
         <Pre
           selected={ this.props.node==this.props.data.selected }
           exitcode={ exitcode }
@@ -70,6 +74,7 @@ class Node extends Component {
         { stderr != "" && <Pre>{ atob(stderr).trim() }</Pre> }
         { stdout != "" && <Pre>{ atob(stdout).trim() }</Pre> }
       </div>
+    </ScrollIntoViewIfNeeded>
   }
 }
 
