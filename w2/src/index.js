@@ -30,6 +30,11 @@ injectGlobal`
   }
 `
 
+console.log(css`
+  color: white;
+  background: ${theme.blue};
+`)
+
 const Pre = styled.pre`
   margin-right: 2px;
   padding: 2px;
@@ -42,19 +47,25 @@ const Pre = styled.pre`
   ${props => {
     if (!('exitcode' in props)) return
 
+    let base = css`
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    `
+
     if (props.selected) return css`
       color: #eee;
       background: ${theme.green};
-    `
+    `.concat(base)
 
     if (props.exitcode == 0) return css`
       color: #eee;
       background: ${theme.blue};
-    `
+    `.concat(base)
+
     return css`
       color: #eee;
       background: ${theme.red};
-    `
+    `.concat(base)
     }}
 `
 
