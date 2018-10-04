@@ -74,8 +74,8 @@ class Node extends Component {
   render() {
     let { run, stdout, stderr, exitcode } = this.props.data.node[this.props.node]
     return <ScrollIntoViewIfNeeded
-        active={ this.props.node==this.props.data.selected }>
-      <div>
+      options={{ block: 'start' }}
+      active={ this.props.node==this.props.data.selected }>
         <Pre
           selected={ this.props.node==this.props.data.selected }
           exitcode={ exitcode }
@@ -84,7 +84,6 @@ class Node extends Component {
         </Pre>
         { stderr != "" && <Pre>{ atob(stderr).trim() }</Pre> }
         { stdout != "" && <Pre>{ atob(stdout).trim() }</Pre> }
-      </div>
     </ScrollIntoViewIfNeeded>
   }
 }
