@@ -74,7 +74,11 @@ class Node extends Component {
   render() {
     let { run, stdout, stderr, exitcode } = this.props.data.node[this.props.node]
     return <ScrollIntoViewIfNeeded
-      options={{ block: 'start' }}
+      options={{
+        behavior: 'smooth',
+        block: 'start',
+        inline: 'nearest',
+        }}
       active={ this.props.node==this.props.data.selected }>
         <Pre
           selected={ this.props.node==this.props.data.selected }
