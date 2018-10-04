@@ -29,8 +29,6 @@ injectGlobal`
 `
 
 const Pre = styled.pre`
-  white-space: pre-wrap;
-  word-wrap: break-word;
   margin-right: 2px;
   padding: 2px;
   background: #fefefe;
