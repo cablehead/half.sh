@@ -17,7 +17,7 @@ if [[ $(cat $1/selected) == $ID ]] ; then
   if [[ "$P" != "/dev/null" ]] ; then
     echo $(basename $(dirname $P)) > $1/selected
   else
-    $BIN/dependson $1 /dev/null | grep -C 1 $ID | grep -v $ID > $1/selected
+    $BIN/dependson $1 /dev/null | grep -C 1 $ID | grep -v $ID | head -n 1 > $1/selected
   fi
 fi
 

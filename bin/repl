@@ -3,10 +3,8 @@
 
 BIN=$(dirname $0)
 
-trap "exit" INT TERM
 trap "stty sane; kill 0" EXIT
 
-open -g http://localhost:8000
 
 while true ; do
     IFS= read -s -r -d '' -n 1 K
@@ -37,13 +35,21 @@ while true ; do
     " ")
         $BIN/run $1
         ;;
+    "r")
+        NAME=$1/node/$S/refresh
+	read -e -p "refresh interval: " N
+	test -z $N && rm -f $NAME || echo $N > $NAME
+        ;;
     "d")
         $BIN/delete $1
         ;;
     $'\n')
+        trap "exit" INT TERM
         $BIN/watch $1 &
         vi $1/node/$S/run
         jobs -p | xargs kill
+	sleep 0.5
+        trap - INT TERM
         ;;
     *)
         echo "[$K]"
