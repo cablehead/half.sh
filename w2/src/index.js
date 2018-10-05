@@ -77,7 +77,7 @@ class Node extends Component {
     return <ScrollIntoViewIfNeeded
       options={{
         behavior: 'smooth',
-        block: 'start',
+        block: 'nearest',
         inline: 'nearest',
         }}
       active={ this.props.node==this.props.data.selected }>
