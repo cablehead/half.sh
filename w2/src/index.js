@@ -43,6 +43,7 @@ const Pre = styled.pre`
   max-width: 82ch;
   max-height: 40ch;
   overflow: auto;
+  overflow-wrap: break-word;
 
   ${props => {
     if (!('exitcode' in props)) return
