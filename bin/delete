@@ -23,6 +23,6 @@ fi
 
 rm -rf $1/node/$ID
 
-if [[ $# -lt 2 ]] ; then
+if [[ $# -le 2 ]] ; then
   $BIN/tree $1 >> $1/stream
 fi

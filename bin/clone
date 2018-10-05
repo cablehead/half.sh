@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -u
+
+BIN=$(dirname $0)
+
+[[ $# -gt 1 ]] && S=$2 || S=$(cat $1/selected)
+
+ID=$($BIN/i $1)
+
+for X in $($BIN/dependson $1 $1/node/$S/stdout); do
+  $BIN/clone $1 $X $ID
+done
+
+cp -R $1/node/$S $1/node/$ID
+
+if [[ $# -eq 3 ]] ; then
+  ln -sf ../$3/stdout $1/node/$ID/stdin
+else
+  # TODO: shouldn't have to refresh full tree
+  # TODO: see also delete
+  echo $ID > $1/selected
+  $BIN/tree $1 >> $1/stream
+fi
