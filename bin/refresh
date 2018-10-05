@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -u
+
+BIN=$(dirname $0)
+
+once() {
+  find $1 -name refresh | while read -r name ; do
+    NODE=$(dirname $name)
+    ID=$(basename $NODE)
+    LAST=$(( $(date +%s) - $(stat -f%c $NODE/stdout) ))
+    if [[ $LAST -ge $(cat $name) ]] ; then
+      touch $NODE/stdout
+      bin/run $1 $ID &
+    fi
+  done
+}
+
+while true ; do
+  once $1
+  sleep 0.1
+done

@@ -7,6 +7,7 @@ BIN=$(dirname $0)
 [[ $# -eq 2 ]] && ID=$2 || ID=$(cat $1/selected)
 
 cd $1/node/$ID
+echo run: $ID $(cat run)
 cat stdin | ./run 1>stdout 2>stderr
 echo $? > exitcode
 

@@ -10,6 +10,7 @@ if [[ -z "$HSH_TRAP" ]] ; then
 fi
 
 $BIN/i $1 serve &
+$BIN/refresh $1 &
 
 websocketd --staticdir=$(dirname $0)/../w2/dist --port 8000 \
     sh -c "($BIN/tree $1; tail -n0 -F $1/stream)"
