@@ -43,6 +43,9 @@ while true ; do
     "d")
         $BIN/delete $1
         ;;
+    "c")
+        $BIN/clone $1
+        ;;
     $'\n')
         trap "exit" INT TERM
         $BIN/watch $1 &
