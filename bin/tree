@@ -29,6 +29,7 @@ def main(a):
 
     D = {
         'root': [],
+        'starred': [],
         'node': {},
         'tree': {},
         'selected': None,
@@ -54,6 +55,8 @@ def main(a):
         else:
             parent = os.path.basename(os.path.dirname(stdin))
             D['tree'].setdefault(parent, []).append(x)
+        if os.path.exists(os.path.join(base, 'starred')):
+            D['starred'].append(x)
 
     print(json.dumps({'$set': D}))
 

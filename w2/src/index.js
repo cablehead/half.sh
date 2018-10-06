@@ -70,6 +70,24 @@ const Pre = styled.pre`
     }}
 `
 
+const Starred = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  opacity: 0.9;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #F2C14E;
+  justify-content: center;
+
+  & pre {
+    background: #7E6551;
+    color: #eee;
+    margin-right: 2px;
+  }
+`
 
 class Node extends Component {
   render() {
@@ -98,6 +116,7 @@ class Main extends Component {
     super(props)
     this.state = {
       root: [],
+      starred: [],
     }
   }
 
@@ -155,7 +174,16 @@ class Main extends Component {
         </div>
       })
 
-    return Tree(this.state.root)
+    return <div>
+      { Tree(this.state.root) }
+      { (this.state.starred.length > 0) &&
+      <Starred>
+      { this.state.starred.map((x) => <pre>
+        { atob(this.state.node[x].stdout).trim() }
+      </pre>) }
+      </Starred>
+      }
+    </div>
   }
 }
 

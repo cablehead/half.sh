@@ -37,8 +37,8 @@ while true ; do
         ;;
     "r")
         NAME=$1/node/$S/refresh
-	read -e -p "refresh interval: " N
-	test -z $N && rm -f $NAME || echo $N > $NAME
+        read -e -p "refresh interval: " N
+        test -z $N && rm -f $NAME || echo $N > $NAME
         ;;
     "d")
         $BIN/delete $1
@@ -46,6 +46,18 @@ while true ; do
     "c")
         $BIN/clone $1
         ;;
+    "*")
+      if [[ -f $1/node/$S/starred ]] ; then
+        echo "unstar"
+        rm $1/node/$S/starred
+      else
+        echo "star"
+        touch $1/node/$S/starred
+      fi
+      find $1/node -name starred | while read -r line ; do
+        basename $(dirname $line)
+      done | sort | jq -c -s '{"starred": {"$set": map(tostring)}}' > $1/stream
+      ;;
     $'\n')
         trap "exit" INT TERM
         $BIN/watch $1 &
