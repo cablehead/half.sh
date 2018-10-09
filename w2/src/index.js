@@ -12,6 +12,7 @@ import { reset } from 'styled-reset'
 
 
 const theme = {
+  white: '#fefefe',
   blue: '#659BB6',
   lightbrown: '#938581',
   green: '#5FAD56',
@@ -35,10 +36,22 @@ console.log(css`
   background: ${theme.blue};
 `)
 
-const Pre = styled.pre`
+const Tab = styled.div`
+  height: 1em;
   margin-right: 2px;
   padding: 2px;
-  background: #fefefe;
+  background: ${theme.white};
+  ${props => {
+    if (props.selected) return css`
+      color: #eee;
+      background: ${theme.green};
+    `
+  }}
+`
+
+const Pre = styled.pre`
+  margin-right: 2px;
+  background: ${theme.white};
   padding: 2px;
   max-width: 82ch;
   max-height: 40ch;
@@ -175,7 +188,16 @@ class Main extends Component {
       })
 
     return <div>
+      <div style={{ display: 'flex' }}>
+      { ['tradier', 'v7'].map((name) =>
+        <Tab selected={ name == 'v7' && 'true' }>
+          { name }
+        </Tab>
+      ) }
+      </div>
+
       { Tree(this.state.root) }
+
       { (this.state.starred.length > 0) &&
       <Starred>
       { this.state.starred.map((x) => <pre>
