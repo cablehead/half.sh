@@ -22,11 +22,16 @@ const theme = {
 
 injectGlobal`
   ${reset}
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
   body {
     font-family: 'Inconsolata';
     font-size: 10pt;
     color: #333;
-    margin: 2px;
     background: ${theme.lightbrown};
   }
 `
@@ -88,9 +93,6 @@ const Starred = styled.div`
   flex-wrap: wrap;
   align-items: center;
   opacity: 0.9;
-  position: fixed;
-  bottom: 0;
-  left: 0;
   width: 100%;
   background: #F2C14E;
   justify-content: center;
@@ -187,7 +189,12 @@ class Main extends Component {
         </div>
       })
 
-    return <div>
+    return <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        }}>
+
       <div style={{ display: 'flex' }}>
       { ['tradier', 'v7'].map((name) =>
         <Tab selected={ name == 'v7' && 'true' }>
@@ -196,7 +203,9 @@ class Main extends Component {
       ) }
       </div>
 
+      <div style={{ flex: 1, overflow: 'auto' }}>
       { Tree(this.state.root) }
+      </div>
 
       { (this.state.starred.length > 0) &&
       <Starred>
@@ -205,6 +214,7 @@ class Main extends Component {
       </pre>) }
       </Starred>
       }
+
     </div>
   }
 }
