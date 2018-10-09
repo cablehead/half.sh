@@ -110,6 +110,7 @@ class Node extends Component {
     return <ScrollIntoViewIfNeeded
       options={{
         behavior: 'smooth',
+        scrollMode: 'if-needed',
         block: 'nearest',
         inline: 'nearest',
         }}
