@@ -19,4 +19,5 @@ ROOT/
           stderr
           status
           starred
+          refresh
 ```
