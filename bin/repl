@@ -56,7 +56,7 @@ while true ; do
       fi
       find $1/node -name starred | while read -r line ; do
         basename $(dirname $line)
-      done | sort | jq -c -s '{"starred": {"$set": map(tostring)}}' > $1/stream
+      done | sort | jq -c -s '{"starred": {"$set": map(tostring)}}' >> $1/stream
       ;;
     $'\n')
         trap "exit" INT TERM
