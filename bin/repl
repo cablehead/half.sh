@@ -5,6 +5,18 @@ export BIN=$(realpath $(dirname $0))
 
 trap "stty sane" EXIT
 
+export ROOT=$1
+
+
+editor() {
+  trap "exit" INT TERM
+  $BIN/watch $ROOT/P/N &
+  vi $ROOT/P/N/run
+  jobs -p | xargs kill
+  sleep 0.5
+  trap - INT TERM
+}
+
 while true ; do
     IFS= read -s -r -d '' -n 1 K
 
@@ -42,6 +54,7 @@ while true ; do
         ;;
     "|")
         $BIN/pipe $1/P/N
+        editor
         ;;
     " ")
         $BIN/run $1/P/N
@@ -68,13 +81,8 @@ while true ; do
       $BIN/tree node $1/P/N >> $1/stream
       ;;
     $'\n')
-        trap "exit" INT TERM
-        $BIN/watch $1/P/N &
-        vi $1/P/N/run
-        jobs -p | xargs kill
-	      sleep 0.5
-        trap - INT TERM
-        ;;
+      editor
+      ;;
     *)
         echo "[$K]"
         ;;
