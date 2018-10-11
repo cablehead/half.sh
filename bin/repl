@@ -59,6 +59,16 @@ while true ; do
     " ")
         $BIN/run $1/P/N
         ;;
+    "p")
+        T=$1/pause
+        if [[ -f $T ]] ; then
+          echo "unpause"
+          rm -f $T
+        else
+          echo "pause"
+          touch $T
+        fi
+        ;;
     "r")
         read -e -p "refresh interval: " N
         test -z $N && rm -f $1/P/N/refresh || echo $N > $1/P/N/refresh

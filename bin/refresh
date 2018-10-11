@@ -5,14 +5,16 @@ set -u
 export BIN=$(realpath $(dirname $0))
 
 once() {
-  find $1/project -name refresh | while read -r line ; do
-    cd $(dirname $line)
-    LAST=$(( $(date +%s) - $(stat -f%c stdout) ))
-    if [[ $LAST -ge $(cat refresh) ]] ; then
-      touch stdout
-      $BIN/run . &
-    fi
-  done
+  if [[ ! -f $1/pause ]] ; then
+    find $1/project -name refresh | while read -r line ; do
+      cd $(dirname $line)
+      LAST=$(( $(date +%s) - $(stat -f%c stdout) ))
+      if [[ $LAST -ge $(cat refresh) ]] ; then
+        touch stdout
+        $BIN/run . &
+      fi
+    done
+  fi
 }
 
 while true ; do
