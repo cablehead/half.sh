@@ -14,7 +14,6 @@ import { reset } from 'styled-reset'
 const theme = {
   white: '#fefefe',
   blue: '#659BB6',
-  lightbrown: '#938581',
   green: '#5FAD56',
   red: '#F24D4D',
 }
@@ -32,7 +31,7 @@ injectGlobal`
     font-family: 'Inconsolata';
     font-size: 10pt;
     color: #333;
-    background: ${theme.lightbrown};
+    background: #867976;
   }
 `
 
@@ -87,14 +86,12 @@ const Starred = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  opacity: 0.9;
   width: 100%;
-  background: #F2C14E;
+  background: #659BB6;
   justify-content: center;
 
   & pre {
-    background: #7E6551;
-    color: #eee;
+    background: ${theme.white};
     margin-right: 2px;
   }
 `
@@ -202,7 +199,7 @@ class Main extends Component {
         flexDirection: 'column',
         height: '100%',
         }}>
-      <div style={{ display: 'flex' }}>
+      <div style={{ display: 'flex', marginBottom: '1px' }}>
         { Object.keys(project).sort().map((k) =>
           <Tab key={ k } selected={ P == k }>
             { project[k].name }
