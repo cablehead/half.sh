@@ -1,28 +1,21 @@
 #!/bin/bash
 
-$BIN/insert P
-$BIN/select P left    # nowhere to go
-$BIN/select P right   # nowhere to go
+$BIN/new ROOT
 
-$PAUSE
-$BIN/pipe P
-$BIN/select P right   # nowhere to go
-$PAUSE
-$BIN/select P left
-$PAUSE
-$BIN/select P right
+$BIN/insert ROOT/P
+$BIN/select ROOT/P/N left    # nowhere to go
+$BIN/select ROOT/P/N right   # nowhere to go
 
-$PAUSE
-echo wc | $BIN/cat P
-$PAUSE
-echo wc -l | $BIN/cat P
+$BIN/pipe ROOT/P/N
+$BIN/select ROOT/P/N right   # nowhere to go
+$BIN/select ROOT/P/N left
+$BIN/select ROOT/P/N right
 
-$PAUSE
-$BIN/select P left
-echo ls -l | $BIN/cat P
+echo wc | $BIN/cat ROOT/P/N
+echo wc -l | $BIN/cat ROOT/P/N
 
-$PAUSE
-$BIN/select P right
+$BIN/select ROOT/P/N left
+echo ls -l | $BIN/cat ROOT/P/N
 
+$BIN/select ROOT/P/N right
 open -g http://localhost:8000
-sleep 1

@@ -1,10 +1,11 @@
 #!/bin/bash
 
-$BIN/select P left
-$BIN/delete P
+$BIN/select ROOT/P/N left
+$BIN/delete ROOT/P/N
 
-$BIN/delete P
-$BIN/select P right
-$BIN/delete P
+$BIN/delete ROOT/P/N
 
-$BIN/delete P
+$BIN/select ROOT/P/N right
+$BIN/delete ROOT/P/N
+
+$BIN/delete ROOT/P/N

@@ -2,7 +2,7 @@
 
 BIN=$(dirname $0)
 
-test -z $1 && ROOT=~/.half.sh/P || ROOT=$1
+test -z $1 && ROOT=~/.half.sh || ROOT=$1
 
 if [[ -z "$HSH_TRAP" ]] ; then
     echo "setting trap"
@@ -10,9 +10,10 @@ if [[ -z "$HSH_TRAP" ]] ; then
     trap "kill 0" EXIT
 fi
 
+mkdir -p $ROOT/project
+touch $ROOT/stream
+
 $BIN/i $ROOT serve &
 $BIN/refresh $ROOT &
 websocketd --staticdir=$(dirname $0)/../w2/dist --port 8000 \
-    -- sh -c "($BIN/tree $ROOT; tail -n0 -F $ROOT/stream)" &
-
-$BIN/repl $ROOT
+    -- sh -c "($BIN/tree root $ROOT; tail -n0 -F $ROOT/stream)"

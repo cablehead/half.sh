@@ -2,20 +2,20 @@
 
 set -u
 
-BIN=$(dirname $0)
+export BIN=$(realpath $(dirname $0))
 
-[[ $# -eq 2 ]] && PARENT=$2 || PARENT=$(cat $1/selected)
+cd $(realpath $1)
+S=$(basename $(pwd))
 
-ID=$($BIN/i $1)
-mkdir -p $1/node/$ID
-echo cat > $1/node/$ID/run
-chmod +x $1/node/$ID/run
-ln -s ../$PARENT/stdout $1/node/$ID/stdin
-$BIN/run $1 $ID
+ID=$($BIN/i ../../../../)
+test -z $ID && exit
 
-echo $ID > $1/selected
-$BIN/dependson $1 $1/node/$PARENT/stdout| \
-  jq --argjson id $ID --argjson parent $PARENT -s -c '{
-    "tree": {($parent | tostring): {"$set": map(tostring)}},
-    "selected": {"$set": ($id | tostring)}
-  }' >> $1/stream
+mkdir ../$ID
+cd ../$ID
+
+echo cat > run
+chmod +x run
+ln -s ../$S/stdout stdin
+
+$BIN/run .
+$BIN/select .

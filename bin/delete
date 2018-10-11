@@ -2,27 +2,31 @@
 
 set -u
 
-BIN=$(dirname $0)
+export BIN=$(realpath $(dirname $0))
 
-[[ $# -gt 1 ]] && ID=$2 || ID=$(cat $1/selected)
+cd $(realpath $1)
 
-for X in $($BIN/dependson $1 $1/node/$ID/stdout); do
-  $BIN/delete $1 $X --sub
-done
+find -L .. -samefile ./stdout -name stdin | \
+    xargs -n1 dirname | xargs -n1 $BIN/delete
 
 # if we're about to delete the currently selected node, try and select this
 # node's parent
-if [[ $(cat $1/selected) == $ID ]] ; then
-  P=$(realpath $1/node/$ID/stdin)
-  if [[ "$P" != "/dev/null" ]] ; then
-    echo $(basename $(dirname $P)) > $1/selected
-  else
-    $BIN/dependson $1 /dev/null | grep -C 1 $ID | grep -v $ID | head -n 1 > $1/selected
-  fi
+if [[ $(pwd) == $(realpath ../../N) ]] ; then
+    $BIN/select . left
+fi
+if [[ $(pwd) == $(realpath ../../N) ]] ; then
+    $BIN/select . up
+fi
+if [[ $(pwd) == $(realpath ../../N) ]] ; then
+    $BIN/select . down
 fi
 
-rm -rf $1/node/$ID
+T=$(pwd)
+cd ..
+rm -rf $T
 
-if [[ $# -le 2 ]] ; then
-  $BIN/tree $1 >> $1/stream
-fi
+cd ../
+
+jq -n -c --argjson id $(basename $T) --argjson p $(basename $(pwd)) '{
+  "project": {($p | tostring): {"node": {"$unset": [($id | tostring)]}}}
+}' >> ../../stream

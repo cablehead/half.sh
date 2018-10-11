@@ -4,32 +4,37 @@ set -u
 
 export BIN=$(realpath $(dirname $0))
 export TMPDIR=$(mktemp -d)
-export HSH_TRAP=1
 export PAUSE="sleep 0.5"
 
 T=$(realpath $1)
 
+export HSH_TRAP=1
 trap "rm -rf $TMPDIR" EXIT
 trap "exit" INT TERM
 trap "kill 0" EXIT
 
+cd $TMPDIR
+mkdir ROOT
 
-if [[ -d $T/P ]] ; then
-  cp -a $T/P $TMPDIR
-  cd $TMPDIR
-else
-  cd $TMPDIR
-  mkdir P
-  touch P/stream
+if [[ -d $T/start ]] ; then
+  cp -a $T/start/* ROOT
 fi
 
-$BIN/serve P &
+$BIN/serve ROOT &
 open -g http://localhost:8000
 sleep 0.5
 
 $T/run
 
+rm -f /tmp/ROOT
+ln -s $TMPDIR/ROOT /tmp/ROOT
 
+echo REPL
+$BIN/repl ROOT
+
+exit
+
+# TODO: resurrect
 # clone this test's results as the start for a new test
 if [[ $# -gt 1 ]] ; then
   cd - > /dev/null
@@ -39,7 +44,3 @@ if [[ $# -gt 1 ]] ; then
   exit
 fi
 
-rm -f /tmp/P
-ln -s $TMPDIR/P /tmp/P
-echo finished.
-sleep 10000

@@ -2,19 +2,18 @@
 
 set -u
 
-BIN=$(dirname $0)
+export BIN=$(realpath $(dirname $0))
 
-ID=$($BIN/i $1)
-mkdir -p $1/node/$ID
-echo echo Hello, world. > $1/node/$ID/run
-chmod +x $1/node/$ID/run
-ln -s /dev/null $1/node/$ID/stdin
-$BIN/run $1 $ID
+cd $1
+ID=$($BIN/i ../..)
+test -z $ID && exit
 
-echo $ID > $1/selected
+NODE=node/$ID
 
-$BIN/dependson $1 /dev/null | \
-  jq --argjson id $ID -s -c '{
-    "root": {"$set": map(tostring)},
-    "selected": {"$set": ($id | tostring)}
-  }' >> $1/stream
+mkdir -p $NODE
+echo echo Hello, world. > $NODE/run
+chmod +x $NODE/run
+ln -s /dev/null $NODE/stdin
+
+$BIN/run $NODE
+$BIN/select $NODE

@@ -1,6 +1,0 @@
-total 16
--rw-r--r--  1 andy  staff  2 Oct  2 16:58 exitcode
--rwxr-xr-x  1 andy  staff  6 Oct  2 16:58 run
--rw-r--r--  1 andy  staff  0 Oct  2 16:58 stderr
-lrwxr-xr-x  1 andy  staff  9 Oct  2 16:58 stdin -> /dev/null
--rw-r--r--  1 andy  staff  0 Oct  2 16:58 stdout

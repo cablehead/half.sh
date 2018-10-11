@@ -21,3 +21,9 @@ ROOT/
           starred
           refresh
 ```
+
+```
+{"project": {
+    "515366767042576": {
+        "name": "squirrel",
+        "node": {

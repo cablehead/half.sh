@@ -4,36 +4,44 @@ set -u
 
 export BIN=$(realpath $(dirname $0))
 
-S=$(cat $1/selected)
-T=$S
+cd $(realpath $1)
+
+if [[ $# -eq 1 ]] ; then
+    S=$(basename $(pwd))
+    cd ../..
+    rm -f N
+    ln -s node/$S N
+
+    jq -n --argjson id $S --argjson p $(ls ..) -s -c '{
+        "project": {($p | tostring): {"N": {"$set": ($id | tostring)}}}
+    }' >> ../../stream
+    exit
+fi
 
 case $2 in
 "left")
-    P=$(realpath $1/node/$S/stdin)
+    P=$(realpath stdin)
     if [[ "$P" == "/dev/null" ]] ; then exit ; fi
-    T=$(basename $(dirname $P))
+    $BIN/select $(dirname $P)
     ;;
 "right")
-    T=$($BIN/dependson $1 $1/node/$S/stdout | head -n 1)
-    if [[ -z $T ]] ; then exit ; fi
+    find -L .. -samefile ./stdout -name stdin | sort | \
+        head -n 1 | \
+        xargs dirname | xargs $BIN/select
     ;;
 "up")
-    T=$($BIN/dependson $1 $(realpath $1/node/$S/stdin) | \
-        grep -B 1 $S | grep -v $S)
-    if [[ -z $T ]] ; then exit ; fi
+    S=$(basename $(pwd))
+    find -L .. -samefile ./stdin -name stdin | sort | \
+        grep -B 1 $S | grep -v $S | \
+        xargs dirname | xargs $BIN/select
     ;;
 "down")
-    T=$($BIN/dependson $1 $(realpath $1/node/$S/stdin) | \
-        grep -A 1 $S | grep -v $S)
-    if [[ -z $T ]] ; then exit ; fi
+    S=$(basename $(pwd))
+    find -L .. -samefile ./stdin -name stdin | sort | \
+        grep -A 1 $S | grep -v $S | \
+        xargs dirname | xargs $BIN/select
     ;;
 *)
-    T=$2
+    echo TODO: $2
     ;;
 esac
-
-echo $T > $1/selected
-
-jq --argjson id $T -n -c '{
-  "selected": {"$set": ($id | tostring)}
-}' >> $1/stream

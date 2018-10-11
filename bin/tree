@@ -1,31 +1,66 @@
 #!/usr/bin/env python3
 
+import pathlib
 import base64
 import json
 import sys
 import os
 
 
-def read(path, name):
-    return open(os.path.join(path, name), 'rb').read()[:2000].strip()
+def read(P, default=None):
+    try:
+        return P.read_text()
+    except:
+        return default
 
 
-def read_as_b64(path, name):
-    return base64.b64encode(read(path, name)).decode()
+def read_as_b64(P):
+    return base64.b64encode(read(P).encode()).decode()
 
 
-def node(base):
+def node(P):
     return {
-        'run': read_as_b64(base, 'run'),
-        'stdout': read_as_b64(base, 'stdout'),
-        'stderr': read_as_b64(base, 'stderr'),
-        'exitcode': int(read(base, 'exitcode')),
+        'run': read_as_b64(P/'run'),
+        'stdin': (P/'stdin').resolve().parent.name,
+        'stdout': read_as_b64(P/'stdout'),
+        'stderr': read_as_b64(P/'stderr'),
+        'exitcode': int(read(P/'exitcode')),
+        'starred': (P/'starred').exists(),
         }
 
 
-def main(a):
-    base = a.pop(0)
-    P = os.path.join(base, 'node')
+def project(P):
+    return {
+        "name": read(P/'name', 'unnamed'),
+        "N": (P/'N').exists() and (P/'N').resolve().name,
+        "node": dict((x.name, node(x)) for x in (P/'node').iterdir()),
+    }
+
+
+def draw_node(a):
+    P = pathlib.Path(a.pop(0)).resolve()
+    print(json.dumps({
+        'project': {
+            P.parent.parent.name: {
+                'node': {
+                    P.name: {
+                        '$set': node(P)}}}}}))
+
+
+def draw_root(a):
+    P = pathlib.Path(a.pop(0))
+
+    if not (P/'project').exists():
+        return {}
+ 
+    return {
+        "P": (P/'P').exists() and (P/'P').resolve().name,
+        "project": dict(
+            (x.name, project(x)) for x in (P/'project').iterdir()),
+    }
+
+    print(json.dumps(D))
+    return
 
     D = {
         'root': [],
@@ -61,4 +96,16 @@ def main(a):
     print(json.dumps({'$set': D}))
 
 
-main(sys.argv[1:])
+def main():
+    a = sys.argv[1:]
+    method = a.pop(0)
+    assert method in ['node', 'root']
+
+    if method == 'root':
+        print(json.dumps({'$set': draw_root(a)}))
+        return
+
+    draw_node(a)
+
+
+main()

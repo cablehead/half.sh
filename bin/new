@@ -1,0 +1,18 @@
+#!/bin/bash
+
+BIN=$(dirname $0)
+
+ID=$($BIN/i $1)
+
+mkdir -p $1/project/$ID/node
+rm -f $1/P
+ln -s project/$ID $1/P
+
+# TODO: reuse bin/tree
+jq -n --argjson id $ID -s -c '{
+    "P": {"$set": ($id | tostring)},
+    "project": {($id | tostring): {"$set": {
+        "name": "unnamed",
+        "node": {},
+        "N": false }}}
+}' >> $1/stream

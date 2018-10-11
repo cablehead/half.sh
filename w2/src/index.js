@@ -36,11 +36,6 @@ injectGlobal`
   }
 `
 
-console.log(css`
-  color: white;
-  background: ${theme.blue};
-`)
-
 const Tab = styled.div`
   height: 1em;
   margin-right: 2px;
@@ -106,7 +101,7 @@ const Starred = styled.div`
 
 class Node extends Component {
   render() {
-    let { run, stdout, stderr, exitcode } = this.props.data.node[this.props.node]
+    let { run, stdout, stderr, exitcode } = this.props.node
     return <ScrollIntoViewIfNeeded
       options={{
         behavior: 'smooth',
@@ -114,9 +109,9 @@ class Node extends Component {
         block: 'nearest',
         inline: 'nearest',
         }}
-      active={ this.props.node==this.props.data.selected }>
+      active={ this.props.selected }>
         <Pre
-          selected={ this.props.node==this.props.data.selected }
+          selected={ this.props.selected }
           exitcode={ exitcode }
         >
           { atob(run).trim() }
@@ -127,12 +122,13 @@ class Node extends Component {
   }
 }
 
+
+
 class Main extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      root: [],
-      starred: [],
+      project: false,
     }
   }
 
@@ -151,10 +147,7 @@ class Main extends Component {
 
       ws.onmessage = function (event) {
         var data = JSON.parse(event.data)
-        console.log(data)
         self.setState(update(self.state, data))
-
-        console.log(self.state)
       }
 
       ws.onclose = function(event) {
@@ -171,9 +164,50 @@ class Main extends Component {
   }
 
   render() {
-    if (!this.state.root.length) return <div><Pre>...</Pre></div>
+    const { P, project } = this.state
 
-    let Tree = (root) => root.sort().map((x) => {
+    if (!Object.keys(project).length) return <div><Pre>...</Pre></div>
+
+    let Tree = (C, stdin) => {
+      const nodes = Object.entries(C.node)
+        .filter(([k, v]) => v.stdin == stdin)
+        .map(([k, v]) => k)
+
+      if (!nodes.length) return
+
+      return <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+        }}>
+        {
+        nodes.sort().map((x) => <div key={ x } style={{
+          display: "flex",
+          flexWrap: "nowrap",
+          }}>
+          <Node node={ C.node[x] } selected={ x == C.N } />
+          { Tree(C, x) }
+        </div>)
+        }
+      </div>
+    }
+
+    return <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        }}>
+      <div style={{ display: 'flex' }}>
+        { Object.keys(project).sort().map((k) =>
+          <Tab key={ k } selected={ P == k }>
+            { project[k].name }
+          </Tab>
+        ) }
+      </div>
+      { Tree(project[P] || {}, 'dev') }
+    </div>
+
+    let Noog = (root) => root.sort().map((x) => {
         return <div key={ x } style={{
           display: "flex",
           flexWrap: "nowrap",
@@ -185,24 +219,12 @@ class Main extends Component {
                 display: "flex",
                 flexDirection: "column",
               }}>
-                { this.state.tree[x] && Tree(this.state.tree[x]) }
+                { Tree(this.state.tree[x]) }
             </div> }
         </div>
       })
 
-    return <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        }}>
-
-      <div style={{ display: 'flex' }}>
-      { ['tradier', 'v7'].map((name) =>
-        <Tab selected={ name == 'v7' && 'true' }>
-          { name }
-        </Tab>
-      ) }
-      </div>
+      return <div>
 
       <div style={{ flex: 1, overflow: 'auto' }}>
       { Tree(this.state.root) }

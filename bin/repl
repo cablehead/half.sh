@@ -1,69 +1,62 @@
 #!/bin/bash
 
 
-BIN=$(dirname $0)
+export BIN=$(realpath $(dirname $0))
 
 trap "stty sane; kill 0" EXIT
 
 
 while true ; do
     IFS= read -s -r -d '' -n 1 K
-    S=$(cat $1/selected)
 
     case $K in
-    "?")
-        echo $S
-        ;;
     "h")
-        $BIN/select $1 left
+        $BIN/select $1/P/N left
         ;;
     "l")
-        $BIN/select $1 right
+        $BIN/select $1/P/N right
         ;;
     "k")
-        $BIN/select $1 up
+        $BIN/select $1/P/N up
         ;;
     "j")
-        $BIN/select $1 down
+        $BIN/select $1/P/N down
         ;;
-    "I")
-        $BIN/insert $1
+    "i")
+        $BIN/insert $1/P
         ;;
     "|")
-        $BIN/pipe $1
+        $BIN/pipe $1/P/N
         ;;
     " ")
-        $BIN/run $1
+        $BIN/run $1/P/N
         ;;
     "r")
-        NAME=$1/node/$S/refresh
         read -e -p "refresh interval: " N
-        test -z $N && rm -f $NAME || echo $N > $NAME
+        test -z $N && rm -f $1/P/N/refresh || echo $N > $1/P/N/refresh
         ;;
     "d")
-        $BIN/delete $1
+        $BIN/delete $1/P/N
         ;;
     "c")
-        $BIN/clone $1
+        $BIN/clone $1/P/N
         ;;
     "*")
-      if [[ -f $1/node/$S/starred ]] ; then
+      T=$1/P/N/starred
+      if [[ -f $T ]] ; then
         echo "unstar"
-        rm $1/node/$S/starred
+        rm -f $T
       else
         echo "star"
-        touch $1/node/$S/starred
+        touch $T
       fi
-      find $1/node -name starred | while read -r line ; do
-        basename $(dirname $line)
-      done | sort | jq -c -s '{"starred": {"$set": map(tostring)}}' >> $1/stream
       ;;
     $'\n')
         trap "exit" INT TERM
-        $BIN/watch $1 &
-        vi $1/node/$S/run
+        $BIN/watch $1/P/N &
+        vi $1/P/N/run
         jobs -p | xargs kill
-	sleep 0.5
+	      sleep 0.5
         trap - INT TERM
         ;;
     *)

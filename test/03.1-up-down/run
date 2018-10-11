@@ -1,24 +1,22 @@
 #!/bin/bash
 
-$BIN/select P down  # nothing
-$BIN/select P up  # nothing
+$BIN/select ROOT/P/N down  # nothing
+$BIN/select ROOT/P/N up    # nothing
 
-$BIN/select P left
-$BIN/select P up
+$BIN/select ROOT/P/N left
+$BIN/select ROOT/P/N up
+$BIN/select ROOT/P/N up    # nothing
 
-$BIN/select P up  # nothing
+$BIN/select ROOT/P/N left
+$BIN/select ROOT/P/N up
+$BIN/select ROOT/P/N right
+$BIN/select ROOT/P/N right
+$BIN/select ROOT/P/N down
 
-$BIN/select P left
-$BIN/select P up
-$BIN/select P right
-$BIN/select P right
-$BIN/select P down
-
-$BIN/select P up
-$BIN/select P left
-
-$BIN/select P left
-$BIN/select P down
-$BIN/select P right
-$BIN/select P down
-$BIN/select P right
+$BIN/select ROOT/P/N up
+$BIN/select ROOT/P/N left
+$BIN/select ROOT/P/N left
+$BIN/select ROOT/P/N down
+$BIN/select ROOT/P/N right
+$BIN/select ROOT/P/N down
+$BIN/select ROOT/P/N right
