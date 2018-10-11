@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -u
+
+export BIN=$(realpath $(dirname $0))
+cd $(realpath $1)
+
+if [[ $# -eq 1 ]] ; then
+  S=$(basename $(pwd))
+  cd ../..
+  rm -f P
+  ln -s project/$S P
+  jq -n --argjson id $S -c '{
+      "P": {"$set": ($id | tostring)}
+  }' >> stream
+  exit
+fi
+
+case $2 in
+"left")
+  S=$(basename $(pwd))
+  cd ..
+  ls | sort | grep -B 1 $S | grep -v $S | xargs $BIN/project-select
+  ;;
+"right")
+  S=$(basename $(pwd))
+  cd ..
+  ls | sort | grep -A 1 $S | grep -v $S | xargs $BIN/project-select
+  ;;
+*)
+  echo TODO: $2
+  ;;
+esac

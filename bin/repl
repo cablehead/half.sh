@@ -9,6 +9,17 @@ while true ; do
     IFS= read -s -r -d '' -n 1 K
 
     case $K in
+    "H")
+        $BIN/project-select $1/P left
+        ;;
+    "L")
+        $BIN/project-select $1/P right
+        ;;
+    "I")
+        $BIN/new $1
+        $BIN/insert $1/P
+        ;;
+
     "h")
         $BIN/select $1/P/N left
         ;;
@@ -21,6 +32,7 @@ while true ; do
     "j")
         $BIN/select $1/P/N down
         ;;
+
     "i")
         $BIN/insert $1/P
         ;;

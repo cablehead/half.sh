@@ -1,0 +1,12 @@
+#!/bin/bash
+
+$BIN/project-select ROOT/P left   # nothing
+$BIN/project-select ROOT/P right  # nothing
+
+$BIN/new ROOT
+$BIN/insert ROOT/P
+
+$BIN/project-select ROOT/P right  # nothing
+
+$BIN/project-select ROOT/P left
+$BIN/project-select ROOT/P right
