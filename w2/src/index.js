@@ -187,7 +187,7 @@ class Main extends Component {
           display: "flex",
           flexWrap: "nowrap",
           }}>
-          <Node node={ C.node[x] } selected={ x == C.N } />
+          <Node node={ C.node[x] } selected={ x == project[P].N } />
           { Tree(C, x) }
         </div>)
         }

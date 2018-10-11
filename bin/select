@@ -11,9 +11,10 @@ if [[ $# -eq 1 ]] ; then
     cd ../..
     rm -f N
     ln -s node/$S N
+    P=$(basename $(pwd))
 
-    jq -n --argjson id $S --argjson p $(ls ..) -s -c '{
-        "project": {($p | tostring): {"N": {"$set": ($id | tostring)}}}
+    jq -n --argjson id $S --argjson p $P -c '{
+      "project": {($p | tostring): {"N": {"$set": ($id | tostring)}}}
     }' >> ../../stream
     exit
 fi
