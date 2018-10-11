@@ -84,11 +84,11 @@ const Pre = styled.pre`
 
 const Starred = styled.div`
   display: flex;
+  justify-content: flex-end;
   flex-wrap: wrap;
   align-items: center;
   width: 100%;
-  background: #659BB6;
-  justify-content: center;
+  background: #ada900;
 
   & pre {
     background: ${theme.white};
