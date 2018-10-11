@@ -10,3 +10,5 @@ $BIN/project-select ROOT/P right  # nothing
 
 $BIN/project-select ROOT/P left
 $BIN/project-select ROOT/P right
+
+$BIN/project-rename ROOT/P foo

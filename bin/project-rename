@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -u
+
+export BIN=$(realpath $(dirname $0))
+cd $(realpath $1)
+
+echo $2 > name
+
+# TODO: reuse bin/tree
+jq -n --argjson id $(basename $(pwd)) --argjson name \""$2"\" -c '{
+    "project": {($id | tostring): {"name": {"$set": $name}}}
+}' >> ../../stream

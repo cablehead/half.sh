@@ -19,6 +19,10 @@ while true ; do
         $BIN/new $1
         $BIN/insert $1/P
         ;;
+    ",")
+        read -e -p "project name: " N
+        test -z $N || $BIN/project-rename $1/P "$N"
+        ;;
 
     "h")
         $BIN/select $1/P/N left
