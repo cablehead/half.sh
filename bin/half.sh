@@ -9,8 +9,7 @@ trap "exit" INT TERM
 trap "kill 0" EXIT
 
 $BIN/serve $ROOT &
+
 sleep 0.5
 open -g http://localhost:8000
-
-echo REPL
 $BIN/repl $ROOT
