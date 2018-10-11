@@ -168,6 +168,11 @@ class Main extends Component {
 
     if (!Object.keys(project).length) return <div><Pre>...</Pre></div>
 
+    const starred = Object.entries((project[P] || {}).node)
+      .filter(([k, v]) => v.starred)
+      .map(([k, v]) => { return {k: k, o: v.stdout} })
+      .sort((a, b) => (a.k - b.k))
+
     let Tree = (C, stdin) => {
       const nodes = Object.entries(C.node)
         .filter(([k, v]) => v.stdin == stdin)
@@ -204,7 +209,16 @@ class Main extends Component {
           </Tab>
         ) }
       </div>
+
+      <div style={{ flex: 1, overflow: 'auto' }}>
       { Tree(project[P] || {}, 'dev') }
+      </div>
+
+      { (starred.length > 0) &&
+      <Starred>{
+        starred.map((x) => <pre key={ x.k }>{ atob(x.o).trim() }</pre>)
+      }</Starred>
+      }
     </div>
 
     let Noog = (root) => root.sort().map((x) => {

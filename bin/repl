@@ -3,8 +3,7 @@
 
 export BIN=$(realpath $(dirname $0))
 
-trap "stty sane; kill 0" EXIT
-
+trap "stty sane" EXIT
 
 while true ; do
     IFS= read -s -r -d '' -n 1 K
@@ -50,6 +49,7 @@ while true ; do
         echo "star"
         touch $T
       fi
+      $BIN/tree node $1/P/N >> $1/stream
       ;;
     $'\n')
         trap "exit" INT TERM

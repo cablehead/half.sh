@@ -9,7 +9,7 @@ import os
 
 def read(P, default=None):
     try:
-        return P.read_text()
+        return P.read_text()[:2000].strip()
     except:
         return default
 
