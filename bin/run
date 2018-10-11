@@ -6,7 +6,7 @@ export BIN=$(realpath $(dirname $0))
 
 cd $(realpath $1)
 
-cat stdin | ./run 1>stdout 2>stderr
+cat stdin | ./run > >(sponge stdout) 2> >(sponge stderr)
 echo $? > exitcode
 
 $BIN/tree node . >> ../../../../stream
