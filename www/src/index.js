@@ -203,22 +203,24 @@ class Main extends Component {
         }}>
 
       { (starred.length > 0) &&
-      <Starred>{
-        starred.map((x) => <pre key={ x.k }>{ atob(x.o).trim() }</pre>)
-      }</Starred>
+        <Starred>{
+          starred.map((x) => <pre key={ x.k }>{ atob(x.o).trim() }</pre>)
+        }</Starred>
       }
 
       <div style={{ flex: 1, overflow: 'auto' }}>
       { Tree(project[P] || {}, 'dev') }
       </div>
 
-      <div style={{ display: 'flex', marginBottom: '1px' }}>
-        { Object.keys(project).sort().map((k) =>
-          <Tab key={ k } selected={ P == k }>
-            { project[k].name }
-          </Tab>
-        ) }
-      </div>
+      { (Object.keys(project).length > 1) &&
+        <div style={{ display: 'flex', marginBottom: '1px' }}>
+          { Object.keys(project).sort().map((k) =>
+            <Tab key={ k } selected={ P == k }>
+              { project[k].name }
+            </Tab>
+          ) }
+        </div>
+      }
 
     </div>
   }
