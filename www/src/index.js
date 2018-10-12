@@ -15,7 +15,7 @@ const theme = {
   white: '#eee',
   grey: '#ccc',
   black: '#666',
-  blue: '#659BB6',
+  blue: '#508ba9',
   green: '#5FAD56',
   red: '#F24D4D',
   brown: '#47403e',
@@ -51,7 +51,7 @@ const Tab = styled.div`
   padding: 2px;
   ${props => {
     if (props.selected) return css`
-      color: ${theme.white};
+      color: ${theme.blue};
     `
   }}
 `
@@ -71,7 +71,6 @@ const Panel = styled.pre`
     `
 
     if (props.selected) return css`
-      color: ${theme.white};
       background: ${theme.blue};
     `.concat(base)
 
