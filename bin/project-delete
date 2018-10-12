@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -u
+
+export BIN=$(realpath $(dirname $0))
+
+cd $(realpath $1)
+ID=$(basename $(pwd))
+cd ..
+$BIN/project-select ./$ID delete
+rm -rf ./$ID
+
+jq -n -c --argjson id $ID '{
+  "project": {"$unset": [($id | tostring)]}
+}' >> ../stream

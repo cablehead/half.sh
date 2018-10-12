@@ -27,6 +27,11 @@ case $2 in
   cd ..
   ls | sort | grep -A 1 $S | grep -v $S | xargs $BIN/project-select
   ;;
+"delete")
+  S=$(basename $(pwd))
+  cd ..
+  ls | sort | grep -C 1 $S | grep -v $S | head -n1 | xargs $BIN/project-select
+  ;;
 *)
   echo TODO: $2
   ;;

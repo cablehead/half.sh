@@ -12,3 +12,7 @@ $BIN/project-select ROOT/P left
 $BIN/project-select ROOT/P right
 
 $BIN/project-rename ROOT/P foo
+
+$BIN/new ROOT
+$BIN/project-delete ROOT/P
+$BIN/project-delete ROOT/P

@@ -161,9 +161,11 @@ class Main extends Component {
   }
 
   render() {
-    const { P, project } = this.state
+    let { P, project } = this.state
 
     if (!Object.keys(project).length) return <div><Panel>...</Panel></div>
+
+    if (!P) P = Object.keys(project)[0]
 
     const starred = Object.entries((project[P] || {}).node)
       .filter(([k, v]) => v.starred)
