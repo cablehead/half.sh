@@ -39,11 +39,9 @@ const Tab = styled.div`
   height: 1em;
   margin-right: 2px;
   padding: 2px;
-  background: ${theme.white};
   ${props => {
     if (props.selected) return css`
       color: #eee;
-      background: ${theme.green};
     `
   }}
 `
@@ -199,6 +197,7 @@ class Main extends Component {
         flexDirection: 'column',
         height: '100%',
         }}>
+
       <div style={{ display: 'flex', marginBottom: '1px' }}>
         { Object.keys(project).sort().map((k) =>
           <Tab key={ k } selected={ P == k }>
