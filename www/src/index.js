@@ -220,39 +220,6 @@ class Main extends Component {
       </div>
 
     </div>
-
-    let Noog = (root) => root.sort().map((x) => {
-        return <div key={ x } style={{
-          display: "flex",
-          flexWrap: "nowrap",
-          }}>
-          <Node node={ x } data={ this.state } />
-          { this.state.tree[x] &&
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-              }}>
-                { Tree(this.state.tree[x]) }
-            </div> }
-        </div>
-      })
-
-      return <div>
-
-      <div style={{ flex: 1, overflow: 'auto' }}>
-      { Tree(this.state.root) }
-      </div>
-
-      { (this.state.starred.length > 0) &&
-      <Starred>
-      { this.state.starred.map((x) => <pre>
-        { atob(this.state.node[x].stdout).trim() }
-      </pre>) }
-      </Starred>
-      }
-
-    </div>
   }
 }
 
