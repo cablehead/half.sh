@@ -12,10 +12,13 @@ import { reset } from 'styled-reset'
 
 
 const theme = {
-  white: '#fefefe',
+  white: '#eee',
+  grey: '#ccc',
+  black: '#666',
   blue: '#659BB6',
   green: '#5FAD56',
   red: '#F24D4D',
+  brown: '#47403e',
 }
 
 
@@ -29,27 +32,31 @@ injectGlobal`
 
   body {
     font-family: 'Inconsolata';
+    font-weight: 100;
     font-size: 10pt;
-    color: #333;
-    background: #867976;
+    color: ${theme.grey};
+    background: ${theme.brown};
+  }
+
+  pre {
+    margin-right: 1px;
+    padding: 2px;
+    border-right: 1px solid ${theme.black};
   }
 `
 
 const Tab = styled.div`
   height: 1em;
-  margin-right: 2px;
+  margin-right: 1px;
   padding: 2px;
   ${props => {
     if (props.selected) return css`
-      color: #eee;
+      color: ${theme.white};
     `
   }}
 `
 
-const Pre = styled.pre`
-  margin-right: 2px;
-  background: ${theme.white};
-  padding: 2px;
+const Panel = styled.pre`
   max-width: 82ch;
   max-height: 40ch;
   overflow: auto;
@@ -64,13 +71,13 @@ const Pre = styled.pre`
     `
 
     if (props.selected) return css`
-      color: #eee;
-      background: ${theme.green};
+      color: ${theme.white};
+      background: ${theme.blue};
     `.concat(base)
 
     if (props.exitcode == 0) return css`
-      color: #eee;
-      background: ${theme.blue};
+      color: ${theme.grey};
+      background: ${theme.black};
     `.concat(base)
 
     return css`
@@ -86,12 +93,8 @@ const Starred = styled.div`
   flex-wrap: wrap;
   align-items: center;
   width: 100%;
-  background: #ada900;
-
-  & pre {
-    background: ${theme.white};
-    margin-right: 2px;
-  }
+  border-bottom: 1px solid ${theme.black};
+  margin-bottom: 1px;
 `
 
 class Node extends Component {
@@ -105,14 +108,14 @@ class Node extends Component {
         inline: 'nearest',
         }}
       active={ this.props.selected }>
-        <Pre
+        <Panel
           selected={ this.props.selected }
           exitcode={ exitcode }
         >
           { atob(run).trim() }
-        </Pre>
-        { stderr != "" && <Pre>{ atob(stderr).trim() }</Pre> }
-        { stdout != "" && <Pre>{ atob(stdout).trim() }</Pre> }
+        </Panel>
+        { stderr != "" && <Panel>{ atob(stderr).trim() }</Panel> }
+        { stdout != "" && <Panel>{ atob(stdout).trim() }</Panel> }
     </ScrollIntoViewIfNeeded>
   }
 }
@@ -161,7 +164,7 @@ class Main extends Component {
   render() {
     const { P, project } = this.state
 
-    if (!Object.keys(project).length) return <div><Pre>...</Pre></div>
+    if (!Object.keys(project).length) return <div><Panel>...</Panel></div>
 
     const starred = Object.entries((project[P] || {}).node)
       .filter(([k, v]) => v.starred)
