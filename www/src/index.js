@@ -23,7 +23,6 @@ const theme = {
   brown: '#383331',
 }
 
-
 injectGlobal`
   ${reset}
 
@@ -35,14 +34,13 @@ injectGlobal`
   body {
     font-family: 'Inconsolata';
     font-size: 10pt;
-    color: ${theme.grey};
-    background: ${theme.brown};
+    color: #333;
+    background: #867976;
   }
 
   pre {
     margin-right: 1px;
     padding: 2px;
-    border-right: 1px solid ${theme.black};
   }
 `
 
@@ -50,9 +48,10 @@ const Tab = styled.div`
   height: 1em;
   margin-right: 1px;
   padding: 2px;
+  background: ${theme.white}
   ${props => {
     if (props.selected) return css`
-      color: ${theme.blue};
+      background: ${theme.green}
     `
   }}
 `
@@ -62,6 +61,7 @@ const Panel = styled.pre`
   max-height: 40ch;
   overflow: auto;
   overflow-wrap: break-word;
+  background: ${theme.white};
 
   ${props => {
     if (!('exitcode' in props)) return
@@ -73,6 +73,7 @@ const Panel = styled.pre`
 
     if (props.selected) return css`
       background: ${theme.blue};
+      color: ${theme.white};
     `.concat(base)
 
     if (props.exitcode == 0) return css`
@@ -93,8 +94,13 @@ const Starred = styled.div`
   flex-wrap: wrap;
   align-items: center;
   width: 100%;
-  border-bottom: 1px solid ${theme.black};
+  background: #ada900;
   margin-bottom: 1px;
+
+  & pre {
+    background: ${theme.white};
+    margin-right: 2px;
+  }
 `
 
 class Node extends Component {
