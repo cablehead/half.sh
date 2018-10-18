@@ -39,7 +39,7 @@ injectGlobal`
   }
 
   pre {
-    margin-right: 1px;
+    margin-right: 2px;
     padding: 2px;
   }
 `
@@ -96,19 +96,26 @@ const Starred = styled.div`
   width: 100%;
   background: #ada900;
   margin-bottom: 1px;
-
-  & pre {
-    background: ${theme.white};
-    margin-right: 2px;
-  }
 `
+
+class Stdout extends Component {
+  render() {
+    let { stdout, raw } = this.props
+    if (stdout != "") {
+      stdout = atob(stdout).trim()
+    }
+
+    if (!raw) return <Panel>{ stdout.substring(0, 2000) }</Panel>
+    return <div style={{width: '80ch', height: '40ch'} }>
+      <Custom code={ stdout } />
+    </div>
+  }
+}
+
 
 class Node extends Component {
   render() {
     let { run, stdout, stderr, exitcode, raw } = this.props.node
-    if (stdout != "") {
-      stdout = atob(stdout).trim()
-    }
 
     return <ScrollIntoViewIfNeeded
       options={{
@@ -125,12 +132,7 @@ class Node extends Component {
           { atob(run).trim() }
         </Panel>
         { stderr != "" && <Panel>{ atob(stderr).trim() }</Panel> }
-        { stdout != "" && raw &&
-          <div style={{width: '80ch', height: '40ch'} }>
-            <Custom code={ stdout } /></div>
-          ||
-          <Panel>{ stdout.substring(0, 2000) }</Panel>
-        }
+        { stdout != "" && <Stdout stdout={ stdout } raw={ raw } /> }
     </ScrollIntoViewIfNeeded>
   }
 }
@@ -206,7 +208,7 @@ class Main extends Component {
 
     const starred = Object.entries((project[P] || {}).node)
       .filter(([k, v]) => v.starred)
-      .map(([k, v]) => { return {k: k, o: v.stdout} })
+      .map(([k, v]) => { return {k: k, o: {stdout: v.stdout, raw: v.raw}} })
       .sort((a, b) => (a.k - b.k))
 
     let Tree = (C, stdin) => {
@@ -241,7 +243,7 @@ class Main extends Component {
 
       { (starred.length > 0) &&
         <Starred>{
-          starred.map((x) => <pre key={ x.k }>{ atob(x.o).trim() }</pre>)
+          starred.map((x) => <Stdout key={ x.k } stdout={ x.o.stdout } raw={ x.o.raw } />)
         }</Starred>
       }
 
