@@ -13,6 +13,7 @@ once() {
         touch stdout
         $BIN/run . &
       fi
+      cd - > /dev/null
     done
   fi
 }

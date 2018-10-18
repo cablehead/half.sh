@@ -19,4 +19,4 @@ $BIN/refresh $ROOT &
 [[ ! -e $ROOT/P ]] && ( sleep 0.1 ; $BIN/new $ROOT; $BIN/insert $ROOT/P )
 
 websocketd --staticdir=$(dirname $0)/../www/dist --port 8000 \
-    -- sh -c "($BIN/tree root $ROOT; tail -n0 -F $ROOT/stream)"
+    -- sh -c "($BIN/tree root $ROOT; tail -n0 -F $ROOT/stream)" > /dev/null

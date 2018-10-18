@@ -10,6 +10,8 @@ import { injectGlobal, css } from 'styled-components'
 
 import { reset } from 'styled-reset'
 
+import ReactHtmlParser from 'react-html-parser'
+
 
 const theme = {
   white: '#eee',
@@ -18,7 +20,7 @@ const theme = {
   blue: '#508ba9',
   green: '#5FAD56',
   red: '#F24D4D',
-  brown: '#47403e',
+  brown: '#383331',
 }
 
 
@@ -32,7 +34,6 @@ injectGlobal`
 
   body {
     font-family: 'Inconsolata';
-    font-weight: 100;
     font-size: 10pt;
     color: ${theme.grey};
     background: ${theme.brown};
@@ -98,7 +99,11 @@ const Starred = styled.div`
 
 class Node extends Component {
   render() {
-    let { run, stdout, stderr, exitcode } = this.props.node
+    let { run, stdout, stderr, exitcode, raw } = this.props.node
+    if (stdout != "") {
+      stdout = atob(stdout).trim()
+    }
+
     return <ScrollIntoViewIfNeeded
       options={{
         behavior: 'smooth',
@@ -114,12 +119,38 @@ class Node extends Component {
           { atob(run).trim() }
         </Panel>
         { stderr != "" && <Panel>{ atob(stderr).trim() }</Panel> }
-        { stdout != "" && <Panel>{ atob(stdout).trim() }</Panel> }
+        { stdout != "" && raw &&
+          <div style={{width: '80ch', height: '40ch'} }>
+            <Custom code={ stdout } /></div>
+          ||
+          <Panel>{ stdout.substring(0, 2000) }</Panel>
+        }
     </ScrollIntoViewIfNeeded>
   }
 }
 
 
+class Custom extends Component {
+  componentDidMount() {
+    console.log('did mount')
+    eval(this.props.code)((this.refs.el))
+  }
+
+  shouldComponentUpdate() {
+    let should = (this.props.code != this.last)
+    this.last = this.props.code
+    return should
+  }
+
+  componentDidUpdate() {
+    console.log('did update')
+    eval(this.props.code)((this.refs.el))
+  }
+
+  render() {
+    return <div style={{ width: '100%', height: '100%' }} ref="el"></div>
+  }
+}
 
 class Main extends Component {
   constructor(props) {
@@ -136,7 +167,7 @@ class Main extends Component {
 
     const reconnect = () => {
       console.log('reconnect', ws, self.mounted)
-      ws = new WebSocket('ws://localhost:8000/data')
+      ws = new WebSocket('ws://' + window.location.hostname + ':8000/data')
 
       ws.onopen = function() {
         console.log('connected')

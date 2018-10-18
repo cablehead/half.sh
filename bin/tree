@@ -9,7 +9,7 @@ import os
 
 def read(P, default=None):
     try:
-        return P.read_text()[:2000].strip()
+        return P.read_text().strip()
     except:
         return default
 
@@ -26,6 +26,7 @@ def node(P):
         'stderr': read_as_b64(P/'stderr'),
         'exitcode': int(read(P/'exitcode')),
         'starred': (P/'starred').exists(),
+        'raw': (P/'raw').exists(),
         }
 
 
