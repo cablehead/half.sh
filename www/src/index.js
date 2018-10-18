@@ -14,7 +14,7 @@ import ReactHtmlParser from 'react-html-parser'
 
 
 const theme = {
-  white: '#eee',
+  white: '#fefefe',
   grey: '#ccc',
   black: '#666',
   blue: '#508ba9',
