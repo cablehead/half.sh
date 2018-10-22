@@ -32,8 +32,8 @@ undo.
 ```
 * <entr>: edit currently selected node
 * '|': pipe the current node to create a new dependent node
-* 'h': select the node to the right
-* 'l': select the node to the left
+* 'h': select the node to the left
+* 'l': select the node to the right
 * 'k': select the node above
 * 'j': select the node below
 * 'i': insert a new root node
