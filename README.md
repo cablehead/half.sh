@@ -45,6 +45,8 @@ undo.
 
 * 'I' (capital): insert a new project (dashboard)
 * ',': rename the current project
+* 'H': (capital) select the project to the left
+* 'L': (capital) select the project to the right
 * 'D' (capital): delete the current project
 ```
 
