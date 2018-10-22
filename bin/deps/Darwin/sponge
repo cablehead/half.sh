@@ -1,2 +1,0 @@
-#!/bin/bash
-PERL5LIB="/usr/local/Cellar/moreutils/0.62/libexec/lib/perl5" exec "/usr/local/Cellar/moreutils/0.62/libexec/bin/sponge" "$@"
