@@ -1,5 +1,7 @@
 # half.sh
 
+## [Screencast / Demo](https://www.half.sh)
+
 ## run locally
 
 ```
