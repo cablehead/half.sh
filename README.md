@@ -2,6 +2,7 @@
 
 ## run locally
 
+```
 $ git clone https://github.com/cablehead/half.sh
 $ cd half.sh
 
@@ -10,6 +11,7 @@ $ cd www
 $ webpack --mode development
 
 $ bin/half.sh
+```
 
 
 ### session structure
