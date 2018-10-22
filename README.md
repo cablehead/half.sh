@@ -32,7 +32,8 @@ Careful! This is currently a very sharp knife. There are no confirm prompts or
 undo.
 
 ```
-* <entr>: edit currently selected node
+* '?': show available commands
+* <enter>: edit currently selected node
 * '|': pipe the current node to create a new dependent node
 * 'h': select the node to the left
 * 'l': select the node to the right

@@ -21,6 +21,9 @@ while true ; do
     IFS= read -s -r -d '' -n 1 K
 
     case $K in
+    "?")
+        $BIN/help-commands
+        ;;
     "H")
         $BIN/project-select $1/P left
         ;;
