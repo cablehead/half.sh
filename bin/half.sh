@@ -2,9 +2,9 @@
 
 test -z $1 && ROOT=~/.half.sh || ROOT=$1
 
-export BIN=$(realpath $(dirname $0))
+export PATH=$PATH:$(dirname $0)/deps/$(uname)
 
-export PATH=$PATH:$BIN/deps/$(uname)
+export BIN=$(realpath $(dirname $0))
 
 export HSH_TRAP=1
 trap "exit" INT TERM
