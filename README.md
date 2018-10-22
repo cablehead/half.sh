@@ -6,8 +6,13 @@
 $ git clone https://github.com/cablehead/half.sh
 $ cd half.sh
 
+
+# install yarn
+$ brew install yarn    # (macOS)
+
 # build the static web ui
 $ cd www
+$ yarn install
 $ webpack --mode development
 
 $ bin/half.sh
