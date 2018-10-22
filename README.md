@@ -40,6 +40,7 @@ undo.
 * 'k': select the node above
 * 'j': select the node below
 * 'i': insert a new root node
+* '*': favorite the selected node so it shows in the top favorite bar
 * 'd': delete the currently selected node and all of it's dependents
 * 'c': clone the currently selected node and all of it's dependents
 * 'r': prompts for a refresh interval, a number in seconds, for how regularly to refresh the currently selected node
