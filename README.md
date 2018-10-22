@@ -29,6 +29,7 @@ mode of interaction! e.g. emacs.
 Careful! This is currently a very sharp knife. There are no confirm prompts or
 undo.
 
+```
 * <entr>: edit currently selected node
 * '|': pipe the current node to create a new dependent node
 * 'h': select the node to the right
@@ -43,6 +44,7 @@ undo.
 * 'I' (capital): insert a new project (dashboard)
 * ',': rename the current project
 * 'D' (capital): delete the current project
+```
 
 
 ### session structure
