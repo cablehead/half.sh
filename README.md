@@ -2,6 +2,27 @@
 
 ## [Screencast / Demo](https://www.half.sh)
 
+## Why?
+
+This is something I hacked together over the last 2 months to try a articulate
+a bunch of pretty orthogonal ideas I've been bouncing around over the years.
+
+* The command line is amazing for fluidly exploring a data set or an automation
+  task but an adhoc session can quickly spiral to the point it's no longer
+  discernible or reusable. Is there a way you can keep that fluidity and
+  instant feedback but introduce some structure to make things reusable? Also,
+  to be able to return to an adhoc session and pick up where you left off?
+
+* 'Use small tools' gets a lot of lip service, but systems are almost
+  exclusively composed in monolithic ecosystems (for example, Golang, Python,
+  Node). What would it look like to actually build a system using small tools?
+  In my experiments it quickly gets unruly. Does it look better if we have a
+  better way to compose shell scripts?
+
+* Have you ever produced an interesting result in a shell session and
+  thought,'I just want this to run forever now' Is there a way to seamlessly
+  take these adhoc sessions and then run them redundantly and robustly?
+
 ## run locally
 
 The following static cli tools are required. A binary version for macOS have
