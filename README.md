@@ -6,18 +6,20 @@
 $ git clone https://github.com/cablehead/half.sh
 $ cd half.sh
 
-
 # install yarn
-$ brew install yarn    # (macOS)
+$ brew install yarn  # (macOS)
 
 # build the static web ui
 $ cd www
 $ yarn install
-$ webpack --mode development
+$ yarn build-dev
+$ cd ..
+
+# install jq
+$ brew install jq  # (macOS)
 
 $ bin/half.sh
 ```
-
 
 ### session structure
 
