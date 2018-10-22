@@ -2,6 +2,10 @@
 
 ## [Screencast / Demo](https://www.half.sh)
 
+![demo](doc/demo1.gif)
+
+![demo](doc/demo2.gif)
+
 ## Why?
 
 This is something I hacked together over the last 2 months to try a articulate
