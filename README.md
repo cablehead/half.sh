@@ -18,7 +18,7 @@ $ cd ..
 # install jq
 $ brew install jq  # (macOS)
 
-$ bin/half.sh
+$ bin/half.sh [session-path (default: ~/.half.sh)]
 ```
 
 ## commands
