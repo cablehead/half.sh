@@ -4,6 +4,14 @@
 
 ## run locally
 
+The following static cli tools are required. A binary version for macOS have
+been committed to this repo. For Linux, you currently need to install these
+manually:
+
+* realpath
+* watchexec  - https://github.com/watchexec/watchexec
+* websocketd - https://github.com/joewalnes/websocketd
+
 ```
 $ git clone https://github.com/cablehead/half.sh
 $ cd half.sh
