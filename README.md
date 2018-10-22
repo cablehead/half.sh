@@ -1,5 +1,17 @@
 # half.sh
 
+## run locally
+
+$ git clone https://github.com/cablehead/half.sh
+$ cd half.sh
+
+# build the static web ui
+$ cd www
+$ webpack --mode development
+
+$ bin/half.sh
+
+
 ### session structure
 
 ```
