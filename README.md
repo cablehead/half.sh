@@ -20,7 +20,7 @@ a bunch of pretty orthogonal ideas I've been bouncing around over the years.
   better way to compose shell scripts?
 
 * Have you ever produced an interesting result in a shell session and
-  thought,'I just want this to run forever now' Is there a way to seamlessly
+  thought, 'I just want this to run forever now' Is there a way to seamlessly
   take these adhoc sessions and then run them redundantly and robustly?
 
 ## run locally
