@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "build-dev": "rm -f dist/build-*.js && webpack --mode development ; open -g http://localhost:8000"
+    "build-dev": "rm -f dist/build-*.js && webpack --mode development"
   },
   "dependencies": {
     "immutability-helper": "^2.8.1",
