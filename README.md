@@ -8,9 +8,6 @@
 
 ## Why?
 
-This is something I hacked together over the last 2 months to try a articulate
-a bunch of pretty orthogonal ideas I've been bouncing around over the years.
-
 * The command line is amazing for fluidly exploring a data set or an automation
   task but an adhoc session can quickly spiral to the point it's no longer
   discernible or reusable. Is there a way you can keep that fluidity and
