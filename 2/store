@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
 
+print('----==----')
+
 import logging
 import ctypes
 import time
+import sys
 
 import lmdb
 
@@ -19,6 +22,11 @@ class Fity3(ctypes.Structure):
 
 class Fity3Exception(Exception):
     pass
+
+
+class Flake(int):
+    def to_bytes(self):
+        return super().to_bytes(7, sys.byteorder)
 
 
 # Wed, 15 Oct 2014 11:00:00.000 GMT
@@ -50,7 +58,7 @@ def next_flake(
     assert worker_id >= 0 and worker_id <= max_worker_id
 
     try:
-        with env.begin(buffers=True, write=True) as txn:
+        with env.begin(write=True) as txn:
             state = txn.get(key)
             if not state:
                 state = Fity3()
@@ -76,7 +84,7 @@ def next_flake(
 
             txn.put(key, state)
 
-            return (
+            return Flake(
                 ((timestamp-fitepoch) << timestamp_left_shift) |
                 (worker_id << worker_id_shift) |
                 state.sequence)
@@ -89,5 +97,56 @@ def next_flake(
 
 env = lmdb.open('foo')
 
-for i in range(10):
-    print(next_flake(env, b'flake', 0))
+flake = next_flake(env, b'mflake', 0)
+
+
+def prefix_iter(env, prefix):
+    print('prefix', prefix)
+    i = int.from_bytes(prefix, sys.byteorder)
+    i += 1
+    end = i.to_bytes(len(prefix)+1, sys.byteorder)
+    ret = []
+    with env.begin() as txn:
+        with txn.cursor() as c:
+            if not c.set_range(prefix):
+                return ret
+            for key, value in c.iternext():
+                if key >= end:
+                    break
+                print('found', key)
+                ret.append((key[len(prefix):], value))
+    return ret
+
+
+def node_new(env, project):
+    flake = next_flake(env, b'mflake', 0)
+    with env.begin(buffers=True, write=True) as txn:
+        txn.put(b'p'+flake.to_bytes(), b'')
+        txn.put(b'o'+project.to_bytes()+b'nodes'+flake.to_bytes())
+        txn.put(b'o'+flake.to_bytes()+b'run', b'echo Hello, world.')
+    return flake
+
+
+def project_new(env):
+    flake = next_flake(env, b'mflake', 0)
+    with env.begin(buffers=True, write=True) as txn:
+        txn.put(b'p'+flake.to_bytes())
+        txn.put(b'o'+flake.to_bytes()+b'name', b'unnamed')
+        print(1)
+        # node_new(env, flake)
+        print(2)
+    return flake
+
+
+def project_list(env):
+    products = prefix_iter(env, b'p')
+    for key, value in  products:
+        with env.begin() as txn:
+            print('list', len(key), key, txn.get(b'o'+key+b'name'))
+
+
+project_list(env)
+print('..')
+project_new(env)
+
+
