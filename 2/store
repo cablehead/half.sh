@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 
+"""
+Usage:
+    {name} project create
+    {name} project list
+"""
 
-print('----==----')
 
 import logging
 import ctypes
 import time
 import sys
 
+import docopt
 import lmdb
 
 
@@ -96,24 +101,19 @@ def next_flake(
 
 
 def prefix_iter(rx, prefix):
-    i = int.from_bytes(prefix, sys.byteorder)
-    i += 1
-    end = i.to_bytes(len(prefix)+1, sys.byteorder)
     ret = []
     with rx.cursor() as c:
         if not c.set_range(prefix):
             return ret
         for key, value in c.iternext():
-            if key >= end:
+            if not key.startswith(prefix):
                 break
-            print('found', key)
             ret.append((key[len(prefix):], value))
     return ret
 
 
 def node_new(wx, project):
     flake = next_flake(wx, b'mflake', 0)
-    wx.put(b'p'+flake.to_bytes(), b'')
     wx.put(b'o'+project.to_bytes()+b'nodes'+flake.to_bytes())
     wx.put(b'o'+flake.to_bytes()+b'run', b'echo Hello, world.')
     return flake
@@ -123,25 +123,47 @@ def project_new(wx):
     flake = next_flake(wx, b'mflake', 0)
     wx.put(b'p'+flake.to_bytes())
     wx.put(b'o'+flake.to_bytes()+b'name', b'unnamed')
-    print(1)
-    # node_new(env, flake)
-    print(2)
+    node_new(wx, flake)
     return flake
+
+
+def project_get(rx, key):
+    ret = {'nodes': []}
+    for key, value in prefix_iter(rx, b'o'+key):
+        if key == b'name':
+            ret['name'] = value.decode()
+        else:
+            ret['nodes'].append(key[len('nodes'):])
+    return ret
 
 
 def project_list(rx):
     products = prefix_iter(rx, b'p')
-    for key, value in  products:
-        print('list', len(key), key, rx.get(b'o'+key+b'name'))
+    for key, _ in  products:
+        flake = int.from_bytes(key[:7], sys.byteorder)
+        project = project_get(rx, key)
+        print(flake, project['name'], len(project['nodes']))
 
 
-def main():
+def main(a):
+    assert a['project']
+
     env = lmdb.open('foo')
-    with env.begin() as rx:
-        project_list(rx)
-    print('..')
-    with env.begin(write=True) as wx:
-        project_new(wx)
+
+    if a['create']:
+        with env.begin(write=True) as wx:
+            flake = project_new(wx)
+            print(flake)
+            return
+
+    if a['list']:
+        with env.begin() as rx:
+            project_list(rx)
+            return
 
 
-sys.exit(main())
+if __name__ == '__main__':
+    usage = ' '.join([x.strip() for x in __doc__.split('\\')])
+    usage = usage.format(name=sys.argv[0])
+    a = docopt.docopt(usage)
+    sys.exit(main(a))
