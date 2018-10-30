@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+
+
+import logging
+import ctypes
+import time
+
+import lmdb
+
+
+log = logging.getLogger(__name__)
+
+
+class Fity3(ctypes.Structure):
+    _fields_ = [
+        ('sequence', ctypes.c_uint),
+        ('last', ctypes.c_ulonglong), ]
+
+
+class Fity3Exception(Exception):
+    pass
+
+
+# Wed, 15 Oct 2014 11:00:00.000 GMT
+fitepoch = 1413370800000
+
+worker_id_bits = 8
+max_worker_id = -1 ^ (-1 << worker_id_bits)
+sequence_bits = 4
+worker_id_shift = sequence_bits
+timestamp_left_shift = sequence_bits + worker_id_bits
+sequence_mask = -1 ^ (-1 << sequence_bits)
+timestamp_mask = -1 >> timestamp_left_shift << timestamp_left_shift
+
+
+def to_timestamp(_id):
+    _id = _id >> timestamp_left_shift  # strip the lower bits
+    _id += fitepoch                    # adjust for epoch
+    _id = _id / 1000                   # convert from milliseconds to seconds
+    return _id
+
+
+def next_flake(
+        env,
+        key,
+        worker_id,
+        sleep=lambda x: time.sleep(x/1000.0),
+        now=lambda: int(time.time()*1000)):
+
+    assert worker_id >= 0 and worker_id <= max_worker_id
+
+    try:
+        with env.begin(buffers=True, write=True) as txn:
+            state = txn.get(key)
+            if not state:
+                state = Fity3()
+            else:
+                state = Fity3.from_buffer_copy(state)
+
+            timestamp = now()
+
+            if state.last > timestamp:
+                raise Fity3Exception(
+                    'clock is moving backwards. waiting until {}'.format(
+                        state.last),
+                    state.last - timestamp)
+
+            if state.last == timestamp:
+                state.sequence = (state.sequence + 1) & sequence_mask
+                if state.sequence == 0:
+                    raise Fity3Exception('sequence overrun', 1)
+            else:
+                state.sequence = 0
+
+            state.last = timestamp
+
+            txn.put(key, state)
+
+            return (
+                ((timestamp-fitepoch) << timestamp_left_shift) |
+                (worker_id << worker_id_shift) |
+                state.sequence)
+
+    except Fity3Exception as e:
+        message, wait = e.args
+        log.warning(message)
+        sleep(wait)
+
+
+env = lmdb.open('foo')
+
+for i in range(10):
+    print(next_flake(env, b'flake', 0))
