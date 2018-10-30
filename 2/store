@@ -49,7 +49,7 @@ def to_timestamp(_id):
 
 
 def next_flake(
-        env,
+        wx,
         key,
         worker_id,
         sleep=lambda x: time.sleep(x/1000.0),
@@ -58,95 +58,90 @@ def next_flake(
     assert worker_id >= 0 and worker_id <= max_worker_id
 
     try:
-        with env.begin(write=True) as txn:
-            state = txn.get(key)
-            if not state:
-                state = Fity3()
-            else:
-                state = Fity3.from_buffer_copy(state)
+        state = wx.get(key)
+        if not state:
+            state = Fity3()
+        else:
+            state = Fity3.from_buffer_copy(state)
 
-            timestamp = now()
+        timestamp = now()
 
-            if state.last > timestamp:
-                raise Fity3Exception(
-                    'clock is moving backwards. waiting until {}'.format(
-                        state.last),
-                    state.last - timestamp)
+        if state.last > timestamp:
+            raise Fity3Exception(
+                'clock is moving backwards. waiting until {}'.format(
+                    state.last),
+                state.last - timestamp)
 
-            if state.last == timestamp:
-                state.sequence = (state.sequence + 1) & sequence_mask
-                if state.sequence == 0:
-                    raise Fity3Exception('sequence overrun', 1)
-            else:
-                state.sequence = 0
+        if state.last == timestamp:
+            state.sequence = (state.sequence + 1) & sequence_mask
+            if state.sequence == 0:
+                raise Fity3Exception('sequence overrun', 1)
+        else:
+            state.sequence = 0
 
-            state.last = timestamp
+        state.last = timestamp
 
-            txn.put(key, state)
+        wx.put(key, state)
 
-            return Flake(
-                ((timestamp-fitepoch) << timestamp_left_shift) |
-                (worker_id << worker_id_shift) |
-                state.sequence)
+        return Flake(
+            ((timestamp-fitepoch) << timestamp_left_shift) |
+            (worker_id << worker_id_shift) |
+            state.sequence)
 
     except Fity3Exception as e:
         message, wait = e.args
         log.warning(message)
         sleep(wait)
+        return next_flake(wx, key, worker_id, sleep=sleep, now=now)
 
 
-env = lmdb.open('foo')
-
-flake = next_flake(env, b'mflake', 0)
-
-
-def prefix_iter(env, prefix):
-    print('prefix', prefix)
+def prefix_iter(rx, prefix):
     i = int.from_bytes(prefix, sys.byteorder)
     i += 1
     end = i.to_bytes(len(prefix)+1, sys.byteorder)
     ret = []
-    with env.begin() as txn:
-        with txn.cursor() as c:
-            if not c.set_range(prefix):
-                return ret
-            for key, value in c.iternext():
-                if key >= end:
-                    break
-                print('found', key)
-                ret.append((key[len(prefix):], value))
+    with rx.cursor() as c:
+        if not c.set_range(prefix):
+            return ret
+        for key, value in c.iternext():
+            if key >= end:
+                break
+            print('found', key)
+            ret.append((key[len(prefix):], value))
     return ret
 
 
-def node_new(env, project):
-    flake = next_flake(env, b'mflake', 0)
-    with env.begin(buffers=True, write=True) as txn:
-        txn.put(b'p'+flake.to_bytes(), b'')
-        txn.put(b'o'+project.to_bytes()+b'nodes'+flake.to_bytes())
-        txn.put(b'o'+flake.to_bytes()+b'run', b'echo Hello, world.')
+def node_new(wx, project):
+    flake = next_flake(wx, b'mflake', 0)
+    wx.put(b'p'+flake.to_bytes(), b'')
+    wx.put(b'o'+project.to_bytes()+b'nodes'+flake.to_bytes())
+    wx.put(b'o'+flake.to_bytes()+b'run', b'echo Hello, world.')
     return flake
 
 
-def project_new(env):
-    flake = next_flake(env, b'mflake', 0)
-    with env.begin(buffers=True, write=True) as txn:
-        txn.put(b'p'+flake.to_bytes())
-        txn.put(b'o'+flake.to_bytes()+b'name', b'unnamed')
-        print(1)
-        # node_new(env, flake)
-        print(2)
+def project_new(wx):
+    flake = next_flake(wx, b'mflake', 0)
+    wx.put(b'p'+flake.to_bytes())
+    wx.put(b'o'+flake.to_bytes()+b'name', b'unnamed')
+    print(1)
+    # node_new(env, flake)
+    print(2)
     return flake
 
 
-def project_list(env):
-    products = prefix_iter(env, b'p')
+def project_list(rx):
+    products = prefix_iter(rx, b'p')
     for key, value in  products:
-        with env.begin() as txn:
-            print('list', len(key), key, txn.get(b'o'+key+b'name'))
+        print('list', len(key), key, rx.get(b'o'+key+b'name'))
 
 
-project_list(env)
-print('..')
-project_new(env)
+def main():
+    env = lmdb.open('foo')
+    with env.begin() as rx:
+        project_list(rx)
+    print('..')
+    with env.begin(write=True) as wx:
+        project_new(wx)
 
 
+sys.exit(main())
