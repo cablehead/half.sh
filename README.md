@@ -100,7 +100,7 @@ ROOT/
           stdin -> ../<id>/stdout
           stdout
           stderr
-          status
+          exitcode
           starred
           refresh
 ```
