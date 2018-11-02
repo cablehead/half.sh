@@ -2,14 +2,45 @@
 
 """
 Usage:
-    {name} project create
-    {name} project list
+    {name} [--path=<path>] project new
+    {name} [--path=<path>] project list
+    {name} [--path=<path>] project <project-id>
+    {name} [--path=<path>] node <node-id>
+    {name} [--path=<path>] node <node-id> cat
+    {name} test
+"""
+
+
+"""
+cat
+check
+clone
+delete
+deps
+h.sh
+half.sh
+help-commands
+i
+insert
+new
+pipe
+project-delete
+project-rename
+project-select
+refresh
+repl
+run
+select
+serve
+tree
+watch
 """
 
 
 import logging
 import ctypes
 import time
+import json
 import sys
 
 import docopt
@@ -30,6 +61,10 @@ class Fity3Exception(Exception):
 
 
 class Flake(int):
+    @staticmethod
+    def from_bytes(key):
+        return Flake(int.from_bytes(key, sys.byteorder))
+
     def to_bytes(self):
         return super().to_bytes(7, sys.byteorder)
 
@@ -119,6 +154,18 @@ def node_new(wx, project):
     return flake
 
 
+def node_get(rx, flake):
+    ret = {}
+    for key, value in prefix_iter(rx, b'o'+flake.to_bytes()):
+        ret[key.decode()] = value.decode()
+    return ret
+
+
+def node_update(wx, flake, data):
+    for name in data:
+        wx.put(b'o'+flake.to_bytes()+name.encode(), data[name].encode())
+
+
 def project_new(wx):
     flake = next_flake(wx, b'mflake', 0)
     wx.put(b'p'+flake.to_bytes())
@@ -127,43 +174,96 @@ def project_new(wx):
     return flake
 
 
-def project_get(rx, key):
+def project_get(rx, flake):
     ret = {'nodes': []}
-    for key, value in prefix_iter(rx, b'o'+key):
+    for key, value in prefix_iter(rx, b'o'+flake.to_bytes()):
         if key == b'name':
             ret['name'] = value.decode()
         else:
-            ret['nodes'].append(key[len('nodes'):])
+            ret['nodes'].append(Flake.from_bytes(key[len('nodes'):]))
     return ret
 
 
 def project_list(rx):
     products = prefix_iter(rx, b'p')
+    ret = {}
     for key, _ in  products:
-        flake = int.from_bytes(key[:7], sys.byteorder)
-        project = project_get(rx, key)
-        print(flake, project['name'], len(project['nodes']))
+        flake = Flake.from_bytes(key[:7])
+        ret[flake] = project_get(rx, flake)
+    return ret
+
+
+def project(env, a):
+    if a.get('new'):
+        with env.begin(write=True) as wx:
+            flake = project_new(wx)
+            return flake
+
+    if a.get('list'):
+        with env.begin() as rx:
+            return project_list(rx)
+
+    with env.begin() as rx:
+        project = project_get(rx, Flake(a['<project-id>']))
+        ret = {}
+        for flake in project['nodes']:
+            ret[flake] = node_get(rx, flake)
+        return ret
+
+
+def node(env, a, stdin=None):
+    if a.get('cat'):
+        if not stdin:
+            stdin = sys.stdin.read()
+        with env.begin(write=True) as wx:
+            flake = Flake(a['<node-id>'])
+            node_update(wx, flake, {'run': stdin})
+
+    with env.begin() as rx:
+        key = Flake(a['<node-id>'])
+        return node_get(rx, key)
+
+
+def test(a):
+    import tempfile
+    import shutil
+    try:
+        path = tempfile.mkdtemp()
+        env = lmdb.open(path)
+        flake = project(env, {'new': True})
+        assert flake in project(env, {'list': True})
+        nodes = project(env, {'<project-id>': flake})
+        for flake in nodes:
+            assert (
+                node(env, {'<node-id>': flake})['run'] ==
+                'echo Hello, world.')
+            node(
+                env,
+                {'<node-id>': flake, 'cat': True},
+                stdin='echo foo bar')
+            assert (
+                node(env, {'<node-id>': flake})['run'] ==
+                'echo foo bar')
+    finally:
+        shutil.rmtree(path)
+    return True
 
 
 def main(a):
-    assert a['project']
-
     env = lmdb.open('foo')
 
-    if a['create']:
-        with env.begin(write=True) as wx:
-            flake = project_new(wx)
-            print(flake)
-            return
+    if a['test']:
+        return test(a)
 
-    if a['list']:
-        with env.begin() as rx:
-            project_list(rx)
-            return
+    if a['project']:
+        return project(env, a)
+
+    if a['node']:
+        return node(env, a)
 
 
 if __name__ == '__main__':
     usage = ' '.join([x.strip() for x in __doc__.split('\\')])
     usage = usage.format(name=sys.argv[0])
     a = docopt.docopt(usage)
-    sys.exit(main(a))
+    print(json.dumps(main(a)))
