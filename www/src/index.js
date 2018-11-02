@@ -117,6 +117,8 @@ class Node extends Component {
   render() {
     let { run, stdout, stderr, exitcode, raw } = this.props.node
 
+  if (atob(run).trim() == 'geo2map') raw = true
+
     return <ScrollIntoViewIfNeeded
       options={{
         behavior: 'smooth',
