@@ -7,6 +7,7 @@ Usage:
     {name} [--path=<path>] project <project-id>
     {name} [--path=<path>] node <node-id>
     {name} [--path=<path>] node <node-id> cat
+    {name} [--path=<path>] node <node-id> run
     {name} test
 """
 
@@ -37,13 +38,18 @@ watch
 """
 
 
+import subprocess
+import tempfile
 import logging
+import shutil
 import ctypes
 import time
 import json
 import sys
+import os
 
 import docopt
+import psutil
 import lmdb
 
 
@@ -155,9 +161,15 @@ def node_new(wx, project):
 
 
 def node_get(rx, flake):
-    ret = {}
+    ret = {'ticks': []}
     for key, value in prefix_iter(rx, b'o'+flake.to_bytes()):
-        ret[key.decode()] = value.decode()
+        if key.startswith(b'tick'):
+            value = json.loads(value)
+            value['tick_id'] = Flake.from_bytes(key[4:])
+            ret['ticks'].append(value)
+        else:
+            ret[key.decode()] = value.decode()
+    ret['ticks'].sort(key=lambda x: x['tick_id'])
     return ret
 
 
@@ -212,21 +224,79 @@ def project(env, a):
 
 
 def node(env, a, stdin=None):
+    flake = Flake(a['<node-id>'])
+
+    if a.get('run'):
+        try:
+            path = tempfile.mkdtemp()
+
+            with env.begin(write=True) as wx:
+                node = node_get(wx, flake)
+
+                if node['ticks']:
+                    tick = node['ticks'][-1]
+                    if 'pid' in tick:
+                        # still running?
+                        if psutil.pid_exists(tick['pid']):
+                            return
+                        # runner must have died
+                        wx.delete(
+                            b'o'+flake.to_bytes() + b'tick' +
+                                Flake(tick['tick_id']).to_bytes())
+
+                with open(
+                        os.open(
+                            path+'/run', os.O_CREAT | os.O_WRONLY, 0o777),
+                        'w') as fh:
+                    fh.write(node['run'])
+
+                p = subprocess.Popen(
+                        path+'/run',
+                        shell=True,
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        )
+
+                tick_id = next_flake(wx, b'mflake', 0)
+                wx.put(
+                    b'o'+flake.to_bytes()+b'tick'+tick_id.to_bytes(),
+                    json.dumps({'pid': p.pid}).encode())
+
+            # end write transation
+
+            res = {}
+            res['stdout'] = p.stdout.read().decode()
+            res['stderr'] = p.stderr.read().decode()
+            res['exitcode'] = p.wait()
+            res = json.dumps(res).encode()
+
+            with env.begin(write=True) as wx:
+                node = node_get(wx, flake)
+                if not node:
+                    return
+                wx.put(
+                    b'o'+flake.to_bytes()+b'tick'+tick_id.to_bytes(),
+                    res)
+                # only keep the last two results
+                for tick in node['ticks'][:-2]:
+                    wx.delete(b'o' + flake.to_bytes() + b'tick' +
+                        Flake(tick['tick_id']).to_bytes())
+
+        finally:
+            shutil.rmtree(path)
+
     if a.get('cat'):
         if not stdin:
             stdin = sys.stdin.read()
         with env.begin(write=True) as wx:
-            flake = Flake(a['<node-id>'])
             node_update(wx, flake, {'run': stdin})
 
     with env.begin() as rx:
-        key = Flake(a['<node-id>'])
-        return node_get(rx, key)
+        return node_get(rx, flake)
 
 
 def test(a):
-    import tempfile
-    import shutil
     try:
         path = tempfile.mkdtemp()
         env = lmdb.open(path)
