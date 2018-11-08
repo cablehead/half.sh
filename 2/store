@@ -51,7 +51,6 @@ delete
 insert
 pipe
 
-select
 watch
 refresh
 
@@ -59,6 +58,8 @@ new
 project-delete
 project-rename
 project-select
+
+select    # moving to client side
 """
 
 

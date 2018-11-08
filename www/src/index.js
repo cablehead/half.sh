@@ -208,6 +208,14 @@ class Main extends Component {
 
     if (!P) P = Object.keys(project)[0]
 
+    if (!project[P].N) {
+      const nodes = Object.entries(project[P].node)
+        .filter(([k, v]) => v.stdin == 'dev')
+        .map(([k, v]) => k)
+      console.log(nodes)
+      if (nodes.length) project[P].N = nodes[0]
+    }
+
     const starred = Object.entries((project[P] || {}).node)
       .filter(([k, v]) => v.starred)
       .map(([k, v]) => { return {k: k, o: {stdout: v.stdout, raw: v.raw}} })
