@@ -1,0 +1,6 @@
+#!/bin/bash
+
+export BIN=$(realpath $(dirname $0))
+
+websocketd --staticdir=$(dirname $0)/../www/dist --port 8000 \
+    -- sh -c "($BIN/store tree); sleep 1000"
