@@ -14,8 +14,23 @@ Usage:
 """
 
 
-"""
+import subprocess
+import tempfile
+import logging
+import base64
+import shutil
+import ctypes
+import time
+import json
+import sys
+import os
 
+import docopt
+import psutil
+import lmdb
+
+
+"""
 deps
 check
 
@@ -45,22 +60,6 @@ project-delete
 project-rename
 project-select
 """
-
-
-import subprocess
-import tempfile
-import logging
-import base64
-import shutil
-import ctypes
-import time
-import json
-import sys
-import os
-
-import docopt
-import psutil
-import lmdb
 
 
 log = logging.getLogger(__name__)
@@ -214,7 +213,7 @@ def project_get(rx, flake):
 def project_list(rx):
     products = prefix_iter(rx, b'p')
     ret = {}
-    for key, _ in  products:
+    for key, _ in products:
         flake = Flake.from_bytes(key[:7])
         ret[flake] = project_get(rx, flake)
     return ret
@@ -274,7 +273,7 @@ def node(env, a, stdin=None):
                         # runner must have died
                         wx.delete(
                             b'o'+flake.to_bytes() + b'tick' +
-                                Flake(tick['tick_id']).to_bytes())
+                            Flake(tick['tick_id']).to_bytes())
 
                 with open(
                         os.open(
@@ -312,7 +311,8 @@ def node(env, a, stdin=None):
                     res)
                 # only keep the last two results
                 for tick in node['ticks'][:-2]:
-                    wx.delete(b'o' + flake.to_bytes() + b'tick' +
+                    wx.delete(
+                        b'o' + flake.to_bytes() + b'tick' +
                         Flake(tick['tick_id']).to_bytes())
 
         finally:
@@ -352,7 +352,7 @@ def test(a):
 
 
 def tree(env, a):
-    ret ={'project': {}}
+    ret = {'project': {}}
     with env.begin() as rx:
         projects = project_list(rx)
         for project_id, project in projects.items():
@@ -363,8 +363,10 @@ def tree(env, a):
                     P['node'][node_id] = {
                         'run': base64.b64encode(node['run'].encode()).decode(),
                         'stdin': 'dev',
-                        'stdout': base64.b64encode(node['ticks'][-1]['stdout'].encode()).decode(),
-                        'stderr': base64.b64encode(node['ticks'][-1]['stderr'].encode()).decode(),
+                        'stdout': base64.b64encode(
+                            node['ticks'][-1]['stdout'].encode()).decode(),
+                        'stderr': base64.b64encode(
+                            node['ticks'][-1]['stderr'].encode()).decode(),
                         'exitcode': node['ticks'][-1]['exitcode'], }
             ret['project'][project_id] = P
     return {'$set': ret}
@@ -391,5 +393,5 @@ if __name__ == '__main__':
     usage = usage.format(name=sys.argv[0])
     a = docopt.docopt(usage)
     ret = main(a)
-    if ret != None:
+    if ret is not None:
         print(json.dumps(ret))
