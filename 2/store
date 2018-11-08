@@ -2,45 +2,55 @@
 
 """
 Usage:
+    {name} test
+    {name} [--path=<path>] tree
     {name} [--path=<path>] project new
     {name} [--path=<path>] project list
     {name} [--path=<path>] project <project-id>
+    {name} [--path=<path>] project <project-id> delete
     {name} [--path=<path>] node <node-id>
     {name} [--path=<path>] node <node-id> cat
     {name} [--path=<path>] node <node-id> run
-    {name} test
 """
 
 
 """
-cat
-check
-clone
-delete
+
 deps
-h.sh
+check
+
 half.sh
 help-commands
-i
+repl
+
+cat     # tick
+i       # tick
+run     # tick
+
+# in progress
+serve
+tree
+
+clone
+delete
 insert
-new
 pipe
+
+select
+watch
+refresh
+
+new
 project-delete
 project-rename
 project-select
-refresh
-repl
-run
-select
-serve
-tree
-watch
 """
 
 
 import subprocess
 import tempfile
 import logging
+import base64
 import shutil
 import ctypes
 import time
@@ -173,6 +183,11 @@ def node_get(rx, flake):
     return ret
 
 
+def node_delete(wx, flake):
+    for key, value in prefix_iter(wx, b'o'+flake.to_bytes()):
+        wx.delete(b'o'+flake.to_bytes()+key)
+
+
 def node_update(wx, flake, data):
     for name in data:
         wx.put(b'o'+flake.to_bytes()+name.encode(), data[name].encode())
@@ -214,6 +229,23 @@ def project(env, a):
     if a.get('list'):
         with env.begin() as rx:
             return project_list(rx)
+
+    if a.get('delete'):
+        with env.begin(write=True) as wx:
+            for key, value in prefix_iter(wx, b''):
+                print(key, value)
+            project_id = Flake(a['<project-id>'])
+            project = project_get(wx, project_id)
+            for node_id in project['nodes']:
+                node_delete(wx, node_id)
+            for key, value in prefix_iter(wx, b'o'+project_id.to_bytes()):
+                wx.delete(b'o'+project_id.to_bytes()+key)
+            wx.delete(b'p'+project_id.to_bytes())
+            print()
+            print()
+            for key, value in prefix_iter(wx, b''):
+                print(key, value)
+        return
 
     with env.begin() as rx:
         project = project_get(rx, Flake(a['<project-id>']))
@@ -319,11 +351,33 @@ def test(a):
     return True
 
 
-def main(a):
-    env = lmdb.open('foo')
+def tree(env, a):
+    ret ={'project': {}}
+    with env.begin() as rx:
+        projects = project_list(rx)
+        for project_id, project in projects.items():
+            P = {'name': project['name'], 'node': {}}
+            for node_id in project['nodes']:
+                node = node_get(rx, node_id)
+                if node['ticks']:
+                    P['node'][node_id] = {
+                        'run': base64.b64encode(node['run'].encode()).decode(),
+                        'stdin': 'dev',
+                        'stdout': base64.b64encode(node['ticks'][-1]['stdout'].encode()).decode(),
+                        'stderr': base64.b64encode(node['ticks'][-1]['stderr'].encode()).decode(),
+                        'exitcode': node['ticks'][-1]['exitcode'], }
+            ret['project'][project_id] = P
+    return {'$set': ret}
 
+
+def main(a):
     if a['test']:
         return test(a)
+
+    env = lmdb.open('foo')
+
+    if a['tree']:
+        return tree(env, a)
 
     if a['project']:
         return project(env, a)
@@ -336,4 +390,6 @@ if __name__ == '__main__':
     usage = ' '.join([x.strip() for x in __doc__.split('\\')])
     usage = usage.format(name=sys.argv[0])
     a = docopt.docopt(usage)
-    print(json.dumps(main(a)))
+    ret = main(a)
+    if ret != None:
+        print(json.dumps(ret))
