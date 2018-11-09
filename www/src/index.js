@@ -135,6 +135,9 @@ class Node extends Component {
               cols="60"
               rows="2"
               autofocus="autofocus"
+              onFocus={
+                (ev) => ev.target.setSelectionRange(0, ev.target.value.length)
+              }
               onKeyDown={
                 (ev) => {
                   if (ev.key == 'Enter' && ev.metaKey) {
