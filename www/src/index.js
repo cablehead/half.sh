@@ -198,6 +198,7 @@ class Main extends Component {
     const reconnect = () => {
       console.log('reconnect', ws, self.mounted)
       ws = new WebSocket('ws://' + window.location.hostname + ':8000/data')
+      this.ws = ws
 
       ws.onopen = function() {
         console.log('connected')
@@ -246,6 +247,7 @@ class Main extends Component {
         this.state.project,
         {[P]: {'node': {[N]: {'run': {'$set': btoa(run)}}}}})
       })
+    this.ws.send(JSON.stringify({m: 'cat', 'a': [P, N, run]}))
   }
 
   componentWillUnmount() {
