@@ -4,6 +4,7 @@
 Usage:
     {name} test
     {name} [--path=<path>] tree
+    {name} [--path=<path>] state
     {name} [--path=<path>] project new
     {name} [--path=<path>] project list
     {name} [--path=<path>] project <project-id>
@@ -373,14 +374,27 @@ def tree(env, a):
     return {'$set': ret}
 
 
+def state(env, a):
+    print(json.dumps(tree(env, a)))
+    for line in sys.stdin:
+        command = json.loads(line)
+        assert command['m'] == 'cat'
+        P, N, run = command['a']
+        node(env, {'cat': True, '<node-id>': N}, stdin=run)
+
+
 def main(a):
     if a['test']:
         return test(a)
+
 
     env = lmdb.open('foo')
 
     if a['tree']:
         return tree(env, a)
+
+    if a['state']:
+        return state(env, a)
 
     if a['project']:
         return project(env, a)
