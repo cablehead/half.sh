@@ -117,7 +117,7 @@ class Node extends Component {
   render() {
     let { run, stdout, stderr, exitcode, raw } = this.props.node
 
-  if (atob(run).trim() == 'geo2map') raw = true
+    if (atob(run).trim() == 'geo2map') raw = true
 
     return <ScrollIntoViewIfNeeded
       options={{
@@ -131,7 +131,24 @@ class Node extends Component {
           selected={ this.props.selected }
           exitcode={ exitcode }
         >
-          { atob(run).trim() }
+          { this.props.edit && <textarea
+              cols="60"
+              rows="2"
+              autofocus="autofocus"
+              onKeyDown={
+                (ev) => {
+                  if (ev.key == 'Enter' && ev.metaKey) {
+                    this.props.editNode(
+                      this.props.P, this.props.N, ev.target.value)
+                  }
+                }
+              }
+              >
+              { atob(run).trim() }
+            </textarea>
+
+            || atob(run).trim()
+          }
         </Panel>
         { stderr != "" && <Panel>{ atob(stderr).trim() }</Panel> }
         { stdout != "" && <Stdout stdout={ stdout } raw={ raw } /> }
@@ -185,7 +202,20 @@ class Main extends Component {
 
       ws.onmessage = function (event) {
         var data = JSON.parse(event.data)
-        self.setState(update(self.state, data))
+
+        data = update(self.state, data)
+
+        if (Object.keys(data.project).length) {
+          if (!data.P) data.P = Object.keys(data.project)[0]
+          if (!data.project[data.P].N) {
+            const nodes = Object.entries(data.project[data.P].node)
+              .filter(([k, v]) => v.stdin == 'dev')
+              .map(([k, v]) => k)
+            if (nodes.length) data.project[data.P].N = nodes[0]
+          }
+        }
+
+        self.setState(data)
       }
 
       ws.onclose = function(event) {
@@ -195,6 +225,24 @@ class Main extends Component {
       }
     }
     reconnect()
+
+    document.addEventListener("keydown", this.handleKeyDown.bind(this))
+  }
+
+  handleKeyDown(ev) {
+    if (ev.key == 'Enter') {
+      let { P, project } = this.state
+      this.setState({edit: project[P].N})
+    }
+  }
+
+  editNode(P, N, run) {
+    this.setState({
+      edit: null,
+      project: update(
+        this.state.project,
+        {[P]: {'node': {[N]: {'run': {'$set': btoa(run)}}}}})
+      })
   }
 
   componentWillUnmount() {
@@ -205,16 +253,6 @@ class Main extends Component {
     let { P, project } = this.state
 
     if (!Object.keys(project).length) return <div><Panel>...</Panel></div>
-
-    if (!P) P = Object.keys(project)[0]
-
-    if (!project[P].N) {
-      const nodes = Object.entries(project[P].node)
-        .filter(([k, v]) => v.stdin == 'dev')
-        .map(([k, v]) => k)
-      console.log(nodes)
-      if (nodes.length) project[P].N = nodes[0]
-    }
 
     const starred = Object.entries((project[P] || {}).node)
       .filter(([k, v]) => v.starred)
@@ -238,7 +276,14 @@ class Main extends Component {
           display: "flex",
           flexWrap: "nowrap",
           }}>
-          <Node node={ C.node[x] } selected={ x == project[P].N } />
+          <Node
+            P={ P }
+            N={ x }
+            node={ C.node[x] }
+            selected={ x == project[P].N }
+            edit={ x == this.state.edit }
+            editNode={ this.editNode.bind(this) }
+            />
           { Tree(C, x) }
         </div>)
         }
