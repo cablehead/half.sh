@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 -u
 
 """
 Usage:
@@ -168,6 +168,7 @@ def node_new(wx, project):
     flake = next_flake(wx, b'mflake', 0)
     wx.put(b'o'+project.to_bytes()+b'nodes'+flake.to_bytes())
     wx.put(b'o'+flake.to_bytes()+b'run', b'echo Hello, world.')
+    wx.put(b'o'+flake.to_bytes()+b'p', project.to_bytes())
     return flake
 
 
@@ -178,6 +179,8 @@ def node_get(rx, flake):
             value = json.loads(value)
             value['tick_id'] = Flake.from_bytes(key[4:])
             ret['ticks'].append(value)
+        elif key == b'p':
+            ret['p'] = Flake.from_bytes(value)
         else:
             ret[key.decode()] = value.decode()
     ret['ticks'].sort(key=lambda x: x['tick_id'])
@@ -256,78 +259,91 @@ def project(env, a):
         return ret
 
 
+def node_run(env, node_id):
+    try:
+        path = tempfile.mkdtemp()
+
+        with env.begin(write=True) as wx:
+            node = node_get(wx, node_id)
+
+            if node['ticks']:
+                tick = node['ticks'][-1]
+                if 'pid' in tick:
+                    # still running?
+                    if psutil.pid_exists(tick['pid']):
+                        return
+                    # runner must have died
+                    wx.delete(
+                        b'o'+node_id.to_bytes() + b'tick' +
+                        Flake(tick['tick_id']).to_bytes())
+
+            with open(
+                    os.open(
+                        path+'/run', os.O_CREAT | os.O_WRONLY, 0o777),
+                    'w') as fh:
+                fh.write(node['run'])
+
+            p = subprocess.Popen(
+                    path+'/run',
+                    shell=True,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    )
+
+            tick_id = next_flake(wx, b'mflake', 0)
+            wx.put(
+                b'o'+node_id.to_bytes()+b'tick'+tick_id.to_bytes(),
+                json.dumps({'pid': p.pid}).encode())
+
+        # end write transation
+
+        res = {}
+        res['stdout'] = p.stdout.read().decode()
+        res['stderr'] = p.stderr.read().decode()
+        res['exitcode'] = p.wait()
+        res = json.dumps(res).encode()
+
+        with env.begin(write=True) as wx:
+            node = node_get(wx, node_id)
+            if not node:
+                return
+            wx.put(
+                b'o'+node_id.to_bytes()+b'tick'+tick_id.to_bytes(),
+                res)
+            # only keep the last two results
+            for tick in node['ticks'][:-2]:
+                wx.delete(
+                    b'o' + node_id.to_bytes() + b'tick' +
+                    Flake(tick['tick_id']).to_bytes())
+
+    finally:
+        shutil.rmtree(path)
+
+
 def node(env, a, stdin=None):
     flake = Flake(a['<node-id>'])
 
     if a.get('run'):
-        try:
-            path = tempfile.mkdtemp()
-
-            with env.begin(write=True) as wx:
-                node = node_get(wx, flake)
-
-                if node['ticks']:
-                    tick = node['ticks'][-1]
-                    if 'pid' in tick:
-                        # still running?
-                        if psutil.pid_exists(tick['pid']):
-                            return
-                        # runner must have died
-                        wx.delete(
-                            b'o'+flake.to_bytes() + b'tick' +
-                            Flake(tick['tick_id']).to_bytes())
-
-                with open(
-                        os.open(
-                            path+'/run', os.O_CREAT | os.O_WRONLY, 0o777),
-                        'w') as fh:
-                    fh.write(node['run'])
-
-                p = subprocess.Popen(
-                        path+'/run',
-                        shell=True,
-                        stdin=subprocess.DEVNULL,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        )
-
-                tick_id = next_flake(wx, b'mflake', 0)
-                wx.put(
-                    b'o'+flake.to_bytes()+b'tick'+tick_id.to_bytes(),
-                    json.dumps({'pid': p.pid}).encode())
-
-            # end write transation
-
-            res = {}
-            res['stdout'] = p.stdout.read().decode()
-            res['stderr'] = p.stderr.read().decode()
-            res['exitcode'] = p.wait()
-            res = json.dumps(res).encode()
-
-            with env.begin(write=True) as wx:
-                node = node_get(wx, flake)
-                if not node:
-                    return
-                wx.put(
-                    b'o'+flake.to_bytes()+b'tick'+tick_id.to_bytes(),
-                    res)
-                # only keep the last two results
-                for tick in node['ticks'][:-2]:
-                    wx.delete(
-                        b'o' + flake.to_bytes() + b'tick' +
-                        Flake(tick['tick_id']).to_bytes())
-
-        finally:
-            shutil.rmtree(path)
+        node_run(env, flake)
 
     if a.get('cat'):
         if not stdin:
             stdin = sys.stdin.read()
         with env.begin(write=True) as wx:
             node_update(wx, flake, {'run': stdin})
+        node_run(env, flake)
 
     with env.begin() as rx:
-        return node_get(rx, flake)
+        node = node_get(rx, flake)
+        if not node:
+            return
+        print(json.dumps({
+            'project': {
+                node['p']: {
+                    'node': {
+                        a['<node-id>']: {
+                            '$set': node_dump(node)}}}}}))
 
 
 def test(a):
@@ -353,6 +369,17 @@ def test(a):
     return True
 
 
+def node_dump(node):
+    return {
+        'run': base64.b64encode(node['run'].encode()).decode(),
+        'stdin': 'dev',
+        'stdout': base64.b64encode(
+            node['ticks'][-1]['stdout'].encode()).decode(),
+        'stderr': base64.b64encode(
+            node['ticks'][-1]['stderr'].encode()).decode(),
+        'exitcode': node['ticks'][-1]['exitcode'], }
+
+
 def tree(env, a):
     ret = {'project': {}}
     with env.begin() as rx:
@@ -362,14 +389,7 @@ def tree(env, a):
             for node_id in project['nodes']:
                 node = node_get(rx, node_id)
                 if node['ticks']:
-                    P['node'][node_id] = {
-                        'run': base64.b64encode(node['run'].encode()).decode(),
-                        'stdin': 'dev',
-                        'stdout': base64.b64encode(
-                            node['ticks'][-1]['stdout'].encode()).decode(),
-                        'stderr': base64.b64encode(
-                            node['ticks'][-1]['stderr'].encode()).decode(),
-                        'exitcode': node['ticks'][-1]['exitcode'], }
+                    P['node'][node_id] = node_dump(node)
             ret['project'][project_id] = P
     return {'$set': ret}
 

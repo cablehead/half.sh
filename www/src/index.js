@@ -206,7 +206,6 @@ class Main extends Component {
 
       ws.onmessage = function (event) {
         var data = JSON.parse(event.data)
-
         data = update(self.state, data)
 
         if (Object.keys(data.project).length) {
