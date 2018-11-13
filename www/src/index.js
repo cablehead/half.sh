@@ -140,9 +140,14 @@ class Node extends Component {
               }
               onKeyDown={
                 (ev) => {
-                  if (ev.key == 'Enter' && ev.metaKey) {
-                    this.props.editNode(
-                      this.props.P, this.props.N, ev.target.value)
+                  if (ev.key == 'Enter' && (ev.metaKey || ev.altKey)) {
+                    ev.preventDefault()
+                    this.props.updateNode(
+                      this.props.P, this.props.N, ev.target.value, ev.metaKey)
+                  }
+                  if (ev.key == 'Tab') {
+                    ev.preventDefault()
+                    document.execCommand('insertText', false, ' '.repeat(2))
                   }
                 }
               }
@@ -239,13 +244,14 @@ class Main extends Component {
     }
   }
 
-  editNode(P, N, run) {
-    this.setState({
-      edit: null,
+  updateNode(P, N, run, done) {
+    const delta = {
       project: update(
         this.state.project,
         {[P]: {'node': {[N]: {'run': {'$set': btoa(run)}}}}})
-      })
+      }
+    if (done) delta.edit = null
+    this.setState(delta)
     this.ws.send(JSON.stringify({m: 'cat', 'a': [P, N, run]}))
   }
 
@@ -286,7 +292,7 @@ class Main extends Component {
             node={ C.node[x] }
             selected={ x == project[P].N }
             edit={ x == this.state.edit }
-            editNode={ this.editNode.bind(this) }
+            updateNode={ this.updateNode.bind(this) }
             />
           { Tree(C, x) }
         </div>)
