@@ -32,6 +32,9 @@ import lmdb
 
 
 """
+
+
+# misc
 deps
 check
 
@@ -39,26 +42,34 @@ half.sh
 help-commands
 repl
 
-cat     # tick
-i       # tick
-run     # tick
+
+# tick
+
+new -> project-new
+
+cat
+i
+run
+tree
+
 
 # in progress
 serve
-tree
+pipe
 
+
+# TBD
 clone
 delete
 insert
-pipe
 
 watch
 refresh
 
-new
 project-delete
 project-rename
 project-select
+
 
 select    # moving to client side
 """
