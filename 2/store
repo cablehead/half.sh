@@ -71,6 +71,9 @@ class LMDB:
         def put(self, *a, **kw):
             return self.tx.put(*a, **kw)
 
+        def delete(self, *a, **kw):
+            return self.tx.delete(*a, **kw)
+
 
 """
 # misc
@@ -400,13 +403,9 @@ def test(a):
         flake = project(env, {'new': True})
         assert flake in project(env, {'list': True})
         nodes = project(env, {'<project-id>': flake})
-
-        return
-
         for node_id in nodes:
             with env.rx() as rx:
                 node = node_get(rx, node_id)
-                print(node)
 
     finally:
         shutil.rmtree(path)
