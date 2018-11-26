@@ -12,6 +12,7 @@ Usage:
     {name} [--path=<path>] node <node-id>
     {name} [--path=<path>] node <node-id> cat
     {name} [--path=<path>] node <node-id> run
+    {name} [--path=<path>] node <node-id> pipe
 """
 
 
@@ -159,7 +160,7 @@ def to_timestamp(_id):
     return _id
 
 
-def next_flake(
+def next_id(
         wx,
         key,
         worker_id,
@@ -203,7 +204,7 @@ def next_flake(
         message, wait = e.args
         log.warning(message)
         sleep(wait)
-        return next_flake(wx, key, worker_id, sleep=sleep, now=now)
+        return next_id(wx, key, worker_id, sleep=sleep, now=now)
 
 
 def prefix_iter(rx, prefix):
@@ -219,16 +220,16 @@ def prefix_iter(rx, prefix):
 
 
 def node_new(wx, project):
-    node_id = next_flake(wx, b'mflake', 0)
+    node_id = next_id(wx, b'mflake', 0)
     wx.put(b'o'+project.to_bytes()+b'nodes'+node_id.to_bytes())
     wx.put(b'o'+node_id.to_bytes()+b'run', b'echo Hello, world.')
     wx.put(b'o'+node_id.to_bytes()+b'p', project.to_bytes())
     return node_id
 
 
-def node_get(rx, flake):
+def node_get(rx, node_id):
     ret = {'ticks': []}
-    for key, value in prefix_iter(rx, b'o'+flake.to_bytes()):
+    for key, value in prefix_iter(rx, b'o'+node_id.to_bytes()):
         if key.startswith(b'tick'):
             value = json.loads(value)
             value['tick_id'] = Flake.from_bytes(key[4:])
@@ -241,27 +242,27 @@ def node_get(rx, flake):
     return ret
 
 
-def node_delete(wx, flake):
-    for key, value in prefix_iter(wx, b'o'+flake.to_bytes()):
-        wx.delete(b'o'+flake.to_bytes()+key)
+def node_delete(wx, node_id):
+    for key, value in prefix_iter(wx, b'o'+node_id.to_bytes()):
+        wx.delete(b'o'+node_id.to_bytes()+key)
 
 
-def node_update(wx, flake, data):
+def node_update(wx, node_id, data):
     for name in data:
-        wx.put(b'o'+flake.to_bytes()+name.encode(), data[name].encode())
+        wx.put(b'o'+node_id.to_bytes()+name.encode(), data[name].encode())
 
 
 def project_new(wx):
-    flake = next_flake(wx, b'mflake', 0)
-    wx.put(b'p'+flake.to_bytes())
-    wx.put(b'o'+flake.to_bytes()+b'name', b'unnamed')
-    node_new(wx, flake)
-    return flake
+    project_id = next_id(wx, b'mflake', 0)
+    wx.put(b'p'+project_id.to_bytes())
+    wx.put(b'o'+project_id.to_bytes()+b'name', b'unnamed')
+    node_new(wx, project_id)
+    return project_id
 
 
-def project_get(rx, flake):
+def project_get(rx, project_id):
     ret = {'nodes': []}
-    for key, value in prefix_iter(rx, b'o'+flake.to_bytes()):
+    for key, value in prefix_iter(rx, b'o'+project_id.to_bytes()):
         if key == b'name':
             ret['name'] = value.decode()
         else:
@@ -273,16 +274,16 @@ def project_list(rx):
     products = prefix_iter(rx, b'p')
     ret = {}
     for key, _ in products:
-        flake = Flake.from_bytes(key[:7])
-        ret[flake] = project_get(rx, flake)
+        project_id = Flake.from_bytes(key[:7])
+        ret[project_id] = project_get(rx, project_id)
     return ret
 
 
 def project(env, a):
     if a.get('new'):
         with env.wx() as wx:
-            flake = project_new(wx)
-            return flake
+            project_id = project_new(wx)
+            return project_id
 
     if a.get('list'):
         with env.rx() as rx:
@@ -308,8 +309,8 @@ def project(env, a):
     with env.rx() as rx:
         project = project_get(rx, Flake(a['<project-id>']))
         ret = {}
-        for flake in project['nodes']:
-            ret[flake] = node_get(rx, flake)
+        for node_id in project['nodes']:
+            ret[node_id] = node_get(rx, node_id)
         return ret
 
 
@@ -345,7 +346,7 @@ def node_run(env, node_id):
                     stderr=subprocess.PIPE,
                     )
 
-            tick_id = next_flake(wx, b'mflake', 0)
+            tick_id = next_id(wx, b'mflake', 0)
             wx.put(
                 b'o'+node_id.to_bytes()+b'tick'+tick_id.to_bytes(),
                 json.dumps({'pid': p.pid}).encode())
@@ -376,20 +377,20 @@ def node_run(env, node_id):
 
 
 def node(env, a, stdin=None):
-    flake = Flake(a['<node-id>'])
+    node_id = Flake(a['<node-id>'])
 
     if a.get('run'):
-        node_run(env, flake)
+        node_run(env, node_id)
 
     if a.get('cat'):
         if not stdin:
             stdin = sys.stdin.read()
         with env.wx() as wx:
-            node_update(wx, flake, {'run': stdin})
-        node_run(env, flake)
+            node_update(wx, node_id, {'run': stdin})
+        node_run(env, node_id)
 
     with env.rx() as rx:
-        node = node_get(rx, flake)
+        node = node_get(rx, node_id)
         if not node:
             return
         print(json.dumps({
@@ -416,9 +417,9 @@ def test(a):
             with wx1.rx() as wx2:
                 pass
 
-        flake = project(env, {'new': True})
-        assert flake in project(env, {'list': True})
-        nodes = project(env, {'<project-id>': flake})
+        project_id = project(env, {'new': True})
+        assert project_id in project(env, {'list': True})
+        nodes = project(env, {'<project-id>': project_id})
         for node_id in nodes:
             with env.rx() as rx:
                 node = node_get(rx, node_id)
