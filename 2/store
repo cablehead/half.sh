@@ -252,11 +252,13 @@ def node_update(wx, node_id, data):
         wx.put(b'o'+node_id.to_bytes()+name.encode(), data[name].encode())
 
 
-def project_new(wx):
-    project_id = next_id(wx, b'mflake', 0)
-    wx.put(b'p'+project_id.to_bytes())
-    wx.put(b'o'+project_id.to_bytes()+b'name', b'unnamed')
-    node_new(wx, project_id)
+def project_new(env):
+    with env.wx() as wx:
+        project_id = next_id(wx, b'mflake', 0)
+        wx.put(b'p'+project_id.to_bytes())
+        wx.put(b'o'+project_id.to_bytes()+b'name', b'unnamed')
+        node_id = node_new(wx, project_id)
+    node_run(env, node_id)
     return project_id
 
 
@@ -281,9 +283,7 @@ def project_list(rx):
 
 def project(env, a):
     if a.get('new'):
-        with env.wx() as wx:
-            project_id = project_new(wx)
-            return project_id
+        return project_new(env)
 
     if a.get('list'):
         with env.rx() as rx:
@@ -317,10 +317,8 @@ def project(env, a):
 def node_run(env, node_id):
     try:
         path = tempfile.mkdtemp()
-
         with env.wx() as wx:
             node = node_get(wx, node_id)
-
             if node['ticks']:
                 tick = node['ticks'][-1]
                 if 'pid' in tick:
@@ -401,8 +399,6 @@ def node(env, a, stdin=None):
                             '$set': node_dump(node)}}}}}))
 
 
-
-
 def test(a):
     try:
         path = tempfile.mkdtemp()
@@ -423,6 +419,7 @@ def test(a):
         for node_id in nodes:
             with env.rx() as rx:
                 node = node_get(rx, node_id)
+                assert node['ticks'][0]['stdout'] == 'Hello, world.\n'
 
     finally:
         shutil.rmtree(path)
