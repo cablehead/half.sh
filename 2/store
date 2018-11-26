@@ -44,11 +44,11 @@ class LMDB:
             return LMDB.Tx(self.env, write=True)
 
     class Tx:
-        def __init__(self, env, write=False, top=None):
+        def __init__(self, env, write=False, top=None, parent=None):
             self.env = env
             self.write = write
             if write or not top:
-                self.tx = self.env.begin(write=write)
+                self.tx = self.env.begin(write=write, parent=parent)
             self.top = top or self
 
         def __enter__(self):
@@ -66,7 +66,7 @@ class LMDB:
 
         def wx(self):
             assert self.write
-            return LMDB.Tx(self.env, write=True, top=self.top)
+            return LMDB.Tx(self.env, write=True, top=self.top, parent=self.tx)
 
         def cursor(self):
             return self.tx.cursor()
@@ -410,7 +410,7 @@ def test(a):
                 pass
 
         with env.wx() as wx1:
-            with wx1.rx() as wx2:
+            with wx1.wx() as wx2:
                 pass
 
         project_id = project(env, {'new': True})
