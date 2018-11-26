@@ -37,30 +37,35 @@ class LMDB:
             self.env = env
 
         def rx(self):
-            return LMDB.Tx(self.env, self.env.begin())
+            return LMDB.Tx(self.env)
 
         def wx(self):
-            return LMDB.Tx(self.env, self.env.begin(write=True))
+            return LMDB.Tx(self.env, write=True)
 
     class Tx:
-        def __init__(self, env, tx):
+        def __init__(self, env, write=False, top=None):
             self.env = env
-            self.tx = tx
+            self.write = write
+            if write or not top:
+                self.tx = self.env.begin(write=write)
+            self.top = top or self
 
         def __enter__(self):
             return self
 
         def __exit__(self, exc_type, exc_value, traceback):
             if exc_type:
-                self.tx.abort()
+                self.top.tx.abort()
             else:
-                self.tx.commit()
+                if self.write or self.top == self:
+                    self.tx.commit()
 
         def rx(self):
-            return LMDB.Tx(self, self.env.begin(parent=self.tx))
+            return LMDB.Tx(self.env, top=self.top)
 
         def wx(self):
-            return LMDB.Tx(self, self.env.begin(parent=self.tx, write=True))
+            assert self.write
+            return LMDB.Tx(self.env, write=True, top=self.top)
 
         def cursor(self):
             return self.tx.cursor()
@@ -395,11 +400,22 @@ def node(env, a, stdin=None):
                             '$set': node_dump(node)}}}}}))
 
 
+
+
 def test(a):
     try:
         path = tempfile.mkdtemp()
         env = lmdb.open(path)
         env = LMDB.Env(env)
+
+        with env.rx() as rx1:
+            with rx1.rx() as rx2:
+                pass
+
+        with env.wx() as wx1:
+            with wx1.rx() as wx2:
+                pass
+
         flake = project(env, {'new': True})
         assert flake in project(env, {'list': True})
         nodes = project(env, {'<project-id>': flake})
