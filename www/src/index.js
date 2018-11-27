@@ -263,6 +263,19 @@ class Main extends Component {
         this.setState({project: update(project, patch)})
       }
 
+    } else if (ev.key == 'j') {
+      let N = project[P].N
+      let stdin = project[P].node[N].stdin
+      let nodes = Object.entries(project[P].node)
+        .filter(([k, v]) => v.stdin == stdin && k > N)
+        .map(([k, v]) => k)
+        .sort()
+
+      if (nodes.length) {
+        let patch = {[P]: {N: {"$set": nodes[0]}}}
+        this.setState({project: update(project, patch)})
+      }
+
     } else if (ev.key == 'Enter') {
       ev.preventDefault()
       this.setState({edit: project[P].N})
