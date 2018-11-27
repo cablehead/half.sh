@@ -134,7 +134,7 @@ class Node extends Component {
           { this.props.edit && <textarea
               cols="60"
               rows="2"
-              autofocus="autofocus"
+              autoFocus="autoFocus"
               onFocus={
                 (ev) => ev.target.setSelectionRange(0, ev.target.value.length)
               }
@@ -145,14 +145,15 @@ class Node extends Component {
                     this.props.updateNode(
                       this.props.P, this.props.N, ev.target.value, ev.metaKey)
                   }
+
                   if (ev.key == 'Tab') {
                     ev.preventDefault()
                     document.execCommand('insertText', false, ' '.repeat(2))
                   }
                 }
               }
+              defaultValue={ atob(run).trim() }
               >
-              { atob(run).trim() }
             </textarea>
 
             || atob(run).trim()
@@ -238,13 +239,36 @@ class Main extends Component {
   }
 
   handleKeyDown(ev) {
+    if (this.editing) return
+
     let { P, project } = this.state
 
-    if (ev.key == 'Enter') {
-      this.setState({edit: project[P].N})
-    }
+    if (ev.key == 'h') {
+      let stdin = project[P].node[project[P].N].stdin
+      if (project[P].node[stdin]) {
+        let patch = {[P]: {N: {"$set": stdin}}}
+        this.setState({project: update(project, patch)})
+      }
 
-    if (ev.key == '|') {
+    } else if (ev.key == 'l') {
+      let N = project[P].N
+
+      let nodes = Object.entries(project[P].node)
+        .filter(([k, v]) => v.stdin == N)
+        .map(([k, v]) => k)
+        .sort()
+
+      if (nodes.length) {
+        let patch = {[P]: {N: {"$set": nodes[0]}}}
+        this.setState({project: update(project, patch)})
+      }
+
+    } else if (ev.key == 'Enter') {
+      ev.preventDefault()
+      this.setState({edit: project[P].N})
+      this.editing = true
+
+    } else if (ev.key == '|') {
       this.ws.send(JSON.stringify({m: 'pipe', 'a': [project[P].N]}))
     }
   }
@@ -255,7 +279,10 @@ class Main extends Component {
         this.state.project,
         {[P]: {'node': {[N]: {'run': {'$set': btoa(run)}}}}})
       }
-    if (done) delta.edit = null
+    if (done) {
+      delta.edit = null
+      this.editing = false
+    }
     this.setState(delta)
     this.ws.send(JSON.stringify({m: 'cat', 'a': [P, N, run]}))
   }
