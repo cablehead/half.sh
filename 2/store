@@ -219,11 +219,13 @@ def prefix_iter(rx, prefix):
     return ret
 
 
-def node_new(wx, project):
+def node_new(wx, project_id, command='echo Hello, world.', stdin=None):
     node_id = next_id(wx, b'mflake', 0)
-    wx.put(b'o'+project.to_bytes()+b'nodes'+node_id.to_bytes())
-    wx.put(b'o'+node_id.to_bytes()+b'run', b'echo Hello, world.')
-    wx.put(b'o'+node_id.to_bytes()+b'p', project.to_bytes())
+    wx.put(b'o'+project_id.to_bytes()+b'nodes'+node_id.to_bytes())
+    wx.put(b'o'+node_id.to_bytes()+b'run', command.encode())
+    wx.put(b'o'+node_id.to_bytes()+b'p', project_id.to_bytes())
+    if stdin:
+        wx.put(b'o'+node_id.to_bytes()+b'stdin', stdin.to_bytes())
     return node_id
 
 
@@ -236,6 +238,8 @@ def node_get(rx, node_id):
             ret['ticks'].append(value)
         elif key == b'p':
             ret['p'] = Flake.from_bytes(value)
+        elif key == b'stdin':
+            ret['stdin'] = Flake.from_bytes(value)
         else:
             ret[key.decode()] = value.decode()
     ret['ticks'].sort(key=lambda x: x['tick_id'])
@@ -339,10 +343,15 @@ def node_run(env, node_id):
             p = subprocess.Popen(
                     path+'/run',
                     shell=True,
-                    stdin=subprocess.DEVNULL,
+                    stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     )
+
+            if 'stdin' in node:
+                stdin = node_get(wx, node['stdin'])
+                p.stdin.write(stdin['ticks'][-1]['stdout'].encode())
+            p.stdin.close()
 
             tick_id = next_id(wx, b'mflake', 0)
             wx.put(
@@ -376,6 +385,13 @@ def node_run(env, node_id):
 
 def node(env, a, stdin=None):
     node_id = Flake(a['<node-id>'])
+
+    if a.get('pipe'):
+        with env.wx() as wx:
+            node = node_get(wx, node_id)
+            project_id = node['p']
+            node_id = node_new(wx, node['p'], command='cat', stdin=node_id)
+        node_run(env, node_id)
 
     if a.get('run'):
         node_run(env, node_id)
@@ -415,11 +431,14 @@ def test(a):
 
         project_id = project(env, {'new': True})
         assert project_id in project(env, {'list': True})
+
         nodes = project(env, {'<project-id>': project_id})
         for node_id in nodes:
             with env.rx() as rx:
-                node = node_get(rx, node_id)
-                assert node['ticks'][0]['stdout'] == 'Hello, world.\n'
+                n = node_get(rx, node_id)
+                assert n['ticks'][0]['stdout'] == 'Hello, world.\n'
+
+                node(env, {'<node-id>': node_id, 'pipe': True})
 
     finally:
         shutil.rmtree(path)
@@ -429,7 +448,7 @@ def test(a):
 def node_dump(node):
     return {
         'run': base64.b64encode(node['run'].encode()).decode(),
-        'stdin': 'dev',
+        'stdin': str(node.get('stdin', 'dev')),
         'stdout': base64.b64encode(
             node['ticks'][-1]['stdout'].encode()).decode(),
         'stderr': base64.b64encode(
