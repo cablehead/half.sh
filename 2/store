@@ -411,7 +411,7 @@ def node(env, a, stdin=None):
             'project': {
                 node['p']: {
                     'node': {
-                        a['<node-id>']: {
+                        str(node_id): {
                             '$set': node_dump(node)}}}}}))
 
 
@@ -474,9 +474,13 @@ def state(env, a):
     print(json.dumps(tree(env, a)))
     for line in sys.stdin:
         command = json.loads(line)
-        assert command['m'] == 'cat'
-        P, N, run = command['a']
-        node(env, {'cat': True, '<node-id>': N}, stdin=run)
+        assert command['m'] in ['cat', 'pipe']
+        if command['m'] == 'cat':
+            P, N, run = command['a']
+            node(env, {'cat': True, '<node-id>': N}, stdin=run)
+        if command['m'] == 'pipe':
+            N, = command['a']
+            node(env, {'pipe': True, '<node-id>': N})
 
 
 def main(a):

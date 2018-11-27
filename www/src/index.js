@@ -238,9 +238,14 @@ class Main extends Component {
   }
 
   handleKeyDown(ev) {
+    let { P, project } = this.state
+
     if (ev.key == 'Enter') {
-      let { P, project } = this.state
       this.setState({edit: project[P].N})
+    }
+
+    if (ev.key == '|') {
+      this.ws.send(JSON.stringify({m: 'pipe', 'a': [project[P].N]}))
     }
   }
 
