@@ -382,37 +382,56 @@ def node_run(env, node_id):
     finally:
         shutil.rmtree(path)
 
+    depends = []
+    with env.rx() as rx:
+        for peer_id in project_get(rx, node['p'])['nodes']:
+            # being lazy here, we should just pull the peer's stdin attribute
+            peer = node_get(rx, peer_id)
+            if peer.get('stdin') == node_id:
+                depends.append(peer_id)
+    return depends
+
 
 def node(env, a, stdin=None):
     node_id = Flake(a['<node-id>'])
 
+    depends = None
+
     if a.get('pipe'):
         with env.wx() as wx:
-            node = node_get(wx, node_id)
-            project_id = node['p']
-            node_id = node_new(wx, node['p'], command='cat', stdin=node_id)
+            n = node_get(wx, node_id)
+            project_id = n['p']
+            node_id = node_new(wx, n['p'], command='cat', stdin=node_id)
         node_run(env, node_id)
 
     if a.get('run'):
-        node_run(env, node_id)
+        depends = node_run(env, node_id)
 
     if a.get('cat'):
         if not stdin:
             stdin = sys.stdin.read()
         with env.wx() as wx:
             node_update(wx, node_id, {'run': stdin})
-        node_run(env, node_id)
+        depends = node_run(env, node_id)
 
     with env.rx() as rx:
-        node = node_get(rx, node_id)
-        if not node:
+        n = node_get(rx, node_id)
+        if not n:
             return
         print(json.dumps({
             'project': {
-                node['p']: {
+                n['p']: {
                     'node': {
                         str(node_id): {
-                            '$set': node_dump(node)}}}}}))
+                            '$set': node_dump(n)}}}}}))
+
+    # need to rework things, to tease out when to output deltas
+    # this is getting squigly
+    #
+    # we should be able to run these in parallel
+    if depends:
+        for peer_id in depends:
+            node(env, {'<node-id>': peer_id, 'run': True})
 
 
 def test(a):
