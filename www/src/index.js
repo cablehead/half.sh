@@ -216,7 +216,8 @@ class Main extends Component {
 
         if (Object.keys(data.project).length) {
           if (!data.P) data.P = Object.keys(data.project)[0]
-          if (!data.project[data.P].N) {
+          if (!data.project[data.P].N ||
+              !data.project[data.P].node[data.project[data.P].N]) {
             const nodes = Object.entries(data.project[data.P].node)
               .filter(([k, v]) => v.stdin == 'dev')
               .map(([k, v]) => k)
@@ -296,6 +297,9 @@ class Main extends Component {
 
     } else if (ev.key == '|') {
       this.ws.send(JSON.stringify({m: 'pipe', 'a': [project[P].N]}))
+
+    } else if (ev.key == 'd') {
+      this.ws.send(JSON.stringify({m: 'delete', 'a': [project[P].N]}))
     }
   }
 

@@ -13,6 +13,7 @@ Usage:
     {name} [--path=<path>] node <node-id> cat
     {name} [--path=<path>] node <node-id> run
     {name} [--path=<path>] node <node-id> pipe
+    {name} [--path=<path>] node <node-id> delete
 """
 
 
@@ -90,28 +91,28 @@ half.sh
 help-commands
 repl
 
-# tick
+# done
 new -> project-new
+project-delete
 
 cat
 i
 run
 tree
+pipe
 
 # in progress
-serve
-pipe
+serve - need to add a watchable stream
+delete
 
 
 # TBD
 clone
-delete
 insert
 
 watch
 refresh
 
-project-delete
 project-rename
 project-select
 
@@ -248,6 +249,8 @@ def node_get(rx, node_id):
 
 def node_delete(wx, node_id):
     for key, value in prefix_iter(wx, b'o'+node_id.to_bytes()):
+        if key == b'p':
+            wx.delete(b'o'+value+b'nodes'+node_id.to_bytes())
         wx.delete(b'o'+node_id.to_bytes()+key)
 
 
@@ -414,6 +417,28 @@ def node(env, a, stdin=None):
             node_update(wx, node_id, {'run': stdin})
         depends = node_run(env, node_id)
 
+    if a.get('delete'):
+        depends = []
+        with env.rx() as rx:
+            n = node_get(rx, node_id)
+            for peer_id in project_get(rx, n['p'])['nodes']:
+                # being lazy here, we should just pull the peer's stdin
+                # attribute
+                peer = node_get(rx, peer_id)
+                if peer.get('stdin') == node_id:
+                    depends.append(peer_id)
+
+        for peer_id in depends:
+            node(env, {'<node-id>': peer_id, 'delete': True})
+
+        with env.wx() as wx:
+            node_delete(wx, node_id)
+            print(json.dumps({
+                'project': {
+                    n['p']: {
+                        'node': {'$unset': [str(node_id)]}}}}))
+            return
+
     with env.rx() as rx:
         n = node_get(rx, node_id)
         if not n:
@@ -456,8 +481,11 @@ def test(a):
             with env.rx() as rx:
                 n = node_get(rx, node_id)
                 assert n['ticks'][0]['stdout'] == 'Hello, world.\n'
-
                 node(env, {'<node-id>': node_id, 'pipe': True})
+                node(env, {'<node-id>': node_id, 'delete': True})
+
+        nodes = project(env, {'<project-id>': project_id})
+        assert nodes == {}
 
     finally:
         shutil.rmtree(path)
@@ -493,13 +521,19 @@ def state(env, a):
     print(json.dumps(tree(env, a)))
     for line in sys.stdin:
         command = json.loads(line)
-        assert command['m'] in ['cat', 'pipe']
+        assert command['m'] in ['cat', 'pipe', 'delete']
+
         if command['m'] == 'cat':
             P, N, run = command['a']
             node(env, {'cat': True, '<node-id>': N}, stdin=run)
+
         if command['m'] == 'pipe':
             N, = command['a']
             node(env, {'pipe': True, '<node-id>': N})
+
+        if command['m'] == 'delete':
+            N, = command['a']
+            node(env, {'delete': True, '<node-id>': N})
 
 
 def main(a):
