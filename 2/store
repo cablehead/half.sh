@@ -101,15 +101,14 @@ i
 run
 tree
 pipe
+insert
+delete
 
 # in progress
 serve - need to add a watchable stream
-delete
-
 
 # TBD
 clone
-insert
 
 watch
 refresh
