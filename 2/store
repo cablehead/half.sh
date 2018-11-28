@@ -9,6 +9,7 @@ Usage:
     {name} [--path=<path>] project list
     {name} [--path=<path>] project <project-id>
     {name} [--path=<path>] project <project-id> delete
+    {name} [--path=<path>] project <project-id> insert
     {name} [--path=<path>] node <node-id>
     {name} [--path=<path>] node <node-id> cat
     {name} [--path=<path>] node <node-id> run
@@ -313,6 +314,23 @@ def project(env, a):
                 print(key, value)
         return
 
+    if a.get('insert'):
+        project_id = Flake(a['<project-id>'])
+        with env.wx() as wx:
+            node_id = node_new(wx, project_id)
+        node_run(env, node_id)
+        with env.rx() as rx:
+            n = node_get(rx, node_id)
+            if not n:
+                return
+            print(json.dumps({
+                'project': {
+                    n['p']: {
+                        'node': {
+                            str(node_id): {
+                                '$set': node_dump(n)}}}}}))
+        return
+
     with env.rx() as rx:
         project = project_get(rx, Flake(a['<project-id>']))
         ret = {}
@@ -487,6 +505,10 @@ def test(a):
         nodes = project(env, {'<project-id>': project_id})
         assert nodes == {}
 
+        project(env, {'<project-id>': project_id, 'insert': True})
+        nodes = project(env, {'<project-id>': project_id})
+        assert nodes != {}
+
     finally:
         shutil.rmtree(path)
     return True
@@ -521,7 +543,7 @@ def state(env, a):
     print(json.dumps(tree(env, a)))
     for line in sys.stdin:
         command = json.loads(line)
-        assert command['m'] in ['cat', 'pipe', 'delete']
+        assert command['m'] in ['cat', 'pipe', 'delete', 'insert']
 
         if command['m'] == 'cat':
             P, N, run = command['a']
@@ -534,6 +556,10 @@ def state(env, a):
         if command['m'] == 'delete':
             N, = command['a']
             node(env, {'delete': True, '<node-id>': N})
+
+        if command['m'] == 'insert':
+            P, = command['a']
+            project(env, {'insert': True, '<project-id>': P})
 
 
 def main(a):

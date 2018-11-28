@@ -298,6 +298,9 @@ class Main extends Component {
     } else if (ev.key == '|') {
       this.ws.send(JSON.stringify({m: 'pipe', 'a': [project[P].N]}))
 
+    } else if (ev.key == 'i') {
+      this.ws.send(JSON.stringify({m: 'insert', 'a': [P]}))
+
     } else if (ev.key == 'd') {
       this.ws.send(JSON.stringify({m: 'delete', 'a': [project[P].N]}))
     }
