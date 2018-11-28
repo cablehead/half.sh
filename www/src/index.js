@@ -201,6 +201,32 @@ class Main extends Component {
     var self = this
     this.mounted = true
 
+    const massage = (curr, next) => {
+      if (!Object.keys(next.project).length) return
+
+      if (!next.P) next.P = Object.keys(next.project)[0]
+
+      // if a new node has been added, select it
+      // this is just a workaround. it really only makes sense to select the
+      // new node if this client added it
+      if (curr.project) {
+        for (var x in next.project[next.P].node) {
+          if (!curr.project[next.P].node[x]) {
+            next.project[next.P].N = x
+            return
+          }
+        }
+      }
+
+      if (!next.project[next.P].N ||
+          !next.project[next.P].node[next.project[next.P].N]) {
+        const nodes = Object.entries(next.project[next.P].node)
+          .filter(([k, v]) => v.stdin == 'dev')
+          .map(([k, v]) => k)
+        if (nodes.length) next.project[next.P].N = nodes[0]
+      }
+    }
+
     const reconnect = () => {
       console.log('reconnect', ws, self.mounted)
       ws = new WebSocket('ws://' + window.location.hostname + ':8000/data')
@@ -214,16 +240,8 @@ class Main extends Component {
         var data = JSON.parse(event.data)
         data = update(self.state, data)
 
-        if (Object.keys(data.project).length) {
-          if (!data.P) data.P = Object.keys(data.project)[0]
-          if (!data.project[data.P].N ||
-              !data.project[data.P].node[data.project[data.P].N]) {
-            const nodes = Object.entries(data.project[data.P].node)
-              .filter(([k, v]) => v.stdin == 'dev')
-              .map(([k, v]) => k)
-            if (nodes.length) data.project[data.P].N = nodes[0]
-          }
-        }
+        massage(self.state, data)
+
 
         self.setState(data)
       }
