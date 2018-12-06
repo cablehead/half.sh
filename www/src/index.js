@@ -262,14 +262,14 @@ class Main extends Component {
 
     let { P, project } = this.state
 
-    if (ev.key == 'h') {
+    if (ev.key == 'h' || ev.key == 'ArrowLeft') {
       let stdin = project[P].node[project[P].N].stdin
       if (project[P].node[stdin]) {
         let patch = {[P]: {N: {"$set": stdin}}}
         this.setState({project: update(project, patch)})
       }
 
-    } else if (ev.key == 'l') {
+    } else if (ev.key == 'l' || ev.key == 'ArrowRight') {
       let N = project[P].N
 
       let nodes = Object.entries(project[P].node)
@@ -282,7 +282,7 @@ class Main extends Component {
         this.setState({project: update(project, patch)})
       }
 
-    } else if (ev.key == 'k') {
+    } else if (ev.key == 'k' || ev.key == 'ArrowUp') {
       let N = project[P].N
       let stdin = project[P].node[N].stdin
       let nodes = Object.entries(project[P].node)
@@ -295,7 +295,7 @@ class Main extends Component {
         this.setState({project: update(project, patch)})
       }
 
-    } else if (ev.key == 'j') {
+    } else if (ev.key == 'j' || ev.key == 'ArrowDown') {
       let N = project[P].N
       let stdin = project[P].node[N].stdin
       let nodes = Object.entries(project[P].node)
@@ -321,6 +321,9 @@ class Main extends Component {
 
     } else if (ev.key == 'd') {
       this.ws.send(JSON.stringify({m: 'delete', 'a': [project[P].N]}))
+
+    } else {
+      console.log('TODO:', ev, ev.key)
     }
   }
 
