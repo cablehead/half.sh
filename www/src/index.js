@@ -115,9 +115,11 @@ class Stdout extends Component {
 
 class Node extends Component {
   render() {
-    let { run, stdout, stderr, exitcode, raw } = this.props.node
+    let { run, stdout, stderr, exitcode, raw, refresh } = this.props.node
 
     if (atob(run).trim() == 'geo2map') raw = true
+
+    console.log(this.props.edit_type)
 
     return <ScrollIntoViewIfNeeded
       options={{
@@ -131,7 +133,44 @@ class Node extends Component {
           selected={ this.props.selected }
           exitcode={ exitcode }
         >
-          { this.props.edit && <textarea
+          { this.props.edit && (
+
+          (this.props.edit_type == 'refresh') &&
+
+          <div>
+            { atob(run).trim() }
+            <div style={{
+              position:'absolute',
+              background: theme.blue,
+              padding: '2px',
+              }}>
+              refresh interval (in seconds):
+              <input
+                autoFocus="autoFocus"
+                onFocus={
+                  (ev) => ev.target.select()
+                }
+                onKeyDown={
+                  (ev) => {
+                  console.log(ev)
+                    if (ev.key == 'Enter') {
+                      ev.preventDefault()
+                      this.props.updateRefresh(
+                        this.props.P, this.props.N, ev.target.value)
+
+                    } else if (isNaN(ev.key) && !(ev.key=='Backspace')) {
+                      ev.preventDefault()
+                    }
+                  }
+                }
+                defaultValue={ refresh }
+                type="number"></input>
+            </div>
+          </div>
+
+          ||
+
+          <textarea
               cols="60"
               rows="2"
               autoFocus="autoFocus"
@@ -144,9 +183,11 @@ class Node extends Component {
                     ev.preventDefault()
                     this.props.updateNode(
                       this.props.P, this.props.N, ev.target.value, ev.metaKey)
-                  }
 
-                  if (ev.key == 'Tab') {
+                  } else if (ev.key == 'Escape') {
+                    console.log('cancel')
+
+                  } else if (ev.key == 'Tab') {
                     ev.preventDefault()
                     document.execCommand('insertText', false, ' '.repeat(2))
                   }
@@ -155,6 +196,7 @@ class Node extends Component {
               defaultValue={ atob(run).trim() }
               >
             </textarea>
+            )
 
             || atob(run).trim()
           }
@@ -313,6 +355,11 @@ class Main extends Component {
       this.setState({edit: project[P].N})
       this.editing = true
 
+    } else if (ev.key == 'r') {
+      ev.preventDefault()
+      this.setState({edit_type: 'refresh', edit: project[P].N})
+      this.editing = true
+
     } else if (ev.key == '|') {
       this.ws.send(JSON.stringify({m: 'pipe', 'a': [project[P].N]}))
 
@@ -325,6 +372,19 @@ class Main extends Component {
     } else {
       console.log('TODO:', ev, ev.key)
     }
+  }
+
+  updateRefresh(P, N, value) {
+    const delta = {
+      project: update(
+        this.state.project,
+        {[P]: {'node': {[N]: {'refresh': {'$set': value}}}}}),
+      edit: null,
+      edit_type: null,
+    }
+    this.editing = false
+    this.setState(delta)
+    this.ws.send(JSON.stringify({m: 'refresh', 'a': [P, N, value]}))
   }
 
   updateNode(P, N, run, done) {
@@ -378,7 +438,9 @@ class Main extends Component {
             node={ C.node[x] }
             selected={ x == project[P].N }
             edit={ x == this.state.edit }
+            edit_type={ this.state.edit_type }
             updateNode={ this.updateNode.bind(this) }
+            updateRefresh={ this.updateRefresh.bind(this) }
             />
           { Tree(C, x) }
         </div>)

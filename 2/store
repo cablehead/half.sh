@@ -19,6 +19,7 @@ Usage:
 
 
 import subprocess
+import threading
 import tempfile
 import logging
 import base64
@@ -514,7 +515,7 @@ def test(a):
 
 
 def node_dump(node):
-    return {
+    ret = {
         'run': base64.b64encode(node['run'].encode()).decode(),
         'stdin': str(node.get('stdin', 'dev')),
         'stdout': base64.b64encode(
@@ -522,6 +523,9 @@ def node_dump(node):
         'stderr': base64.b64encode(
             node['ticks'][-1]['stderr'].encode()).decode(),
         'exitcode': node['ticks'][-1]['exitcode'], }
+    if 'refresh' in node:
+        ret['refresh'] = node['refresh']
+    return ret
 
 
 def tree(env, a):
@@ -538,15 +542,52 @@ def tree(env, a):
     return {'$set': ret}
 
 
+def watch(env):
+    while True:
+        renew = []
+
+        with env.rx() as rx:
+            projects = project_list(rx)
+            for project_id, project in projects.items():
+                # being lazy, should be able to just pull the refresh
+                # attribute
+                for node_id in project['nodes']:
+                    n = node_get(rx, node_id)
+                    if 'refresh' in n and n['refresh']:
+                        refresh = int(n['refresh'])
+                        if refresh > 0:
+                            now = time.time()
+                            last = to_timestamp(n['ticks'][-1]['tick_id'])
+                            since = now - last
+                            if since > refresh:
+                                renew.append(node_id)
+
+        # need to think through the consequences of not doing this inside the
+        # read transaction
+        for node_id in renew:
+            node(env, {'<node-id>': node_id, 'run': True})
+
+        time.sleep(10/1000)
+
+
 def state(env, a):
     print(json.dumps(tree(env, a)))
+
+    t = threading.Thread(target=watch, args=(env,), daemon=True)
+    t.start()
+
     for line in sys.stdin:
         command = json.loads(line)
-        assert command['m'] in ['cat', 'pipe', 'delete', 'insert']
+        assert command['m'] in ['refresh', 'cat', 'pipe', 'delete', 'insert']
 
         if command['m'] == 'cat':
             P, N, run = command['a']
             node(env, {'cat': True, '<node-id>': N}, stdin=run)
+
+        if command['m'] == 'refresh':
+            P, N, value = command['a']
+            with env.wx() as wx:
+                node_update(wx, Flake(N), {'refresh': value})
 
         if command['m'] == 'pipe':
             N, = command['a']
@@ -565,7 +606,7 @@ def main(a):
     if a['test']:
         return test(a)
 
-    env = lmdb.open('foo')
+    env = lmdb.open('foo', max_readers=1024)
     env = LMDB.Env(env)
 
     if a['tree']:
