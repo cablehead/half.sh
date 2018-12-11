@@ -515,6 +515,8 @@ def test(a):
 
 
 def node_dump(node):
+    if not 'stdout' in node['ticks'][-1]:
+        return {}
     ret = {
         'run': base64.b64encode(node['run'].encode()).decode(),
         'stdin': str(node.get('stdin', 'dev')),
