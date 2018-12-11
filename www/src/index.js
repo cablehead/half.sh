@@ -119,8 +119,6 @@ class Node extends Component {
 
     if (atob(run).trim() == 'geo2map') raw = true
 
-    console.log(this.props.edit_type)
-
     return <ScrollIntoViewIfNeeded
       options={{
         behavior: 'smooth',
@@ -152,11 +150,13 @@ class Node extends Component {
                 }
                 onKeyDown={
                   (ev) => {
-                  console.log(ev)
                     if (ev.key == 'Enter') {
                       ev.preventDefault()
                       this.props.updateRefresh(
                         this.props.P, this.props.N, ev.target.value)
+
+                  } else if (ev.key == 'Escape') {
+                    this.props.cancelEdit()
 
                     } else if (isNaN(ev.key) && !(ev.key=='Backspace')) {
                       ev.preventDefault()
@@ -185,7 +185,7 @@ class Node extends Component {
                       this.props.P, this.props.N, ev.target.value, ev.metaKey)
 
                   } else if (ev.key == 'Escape') {
-                    console.log('cancel')
+                    this.props.cancelEdit()
 
                   } else if (ev.key == 'Tab') {
                     ev.preventDefault()
@@ -387,6 +387,15 @@ class Main extends Component {
     this.ws.send(JSON.stringify({m: 'refresh', 'a': [P, N, value]}))
   }
 
+  cancelEdit() {
+    const delta = {
+      edit: null,
+      edit_type: null,
+    }
+    this.editing = false
+    this.setState(delta)
+  }
+
   updateNode(P, N, run, done) {
     const delta = {
       project: update(
@@ -440,6 +449,7 @@ class Main extends Component {
             edit={ x == this.state.edit }
             edit_type={ this.state.edit_type }
             updateNode={ this.updateNode.bind(this) }
+            cancelEdit={ this.cancelEdit.bind(this) }
             updateRefresh={ this.updateRefresh.bind(this) }
             />
           { Tree(C, x) }
