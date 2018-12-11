@@ -38,6 +38,10 @@ injectGlobal`
     background: #867976;
   }
 
+  textarea {
+    font-size: 11pt;
+  }
+
   pre {
     margin-right: 2px;
     padding: 2px;
@@ -172,7 +176,7 @@ class Node extends Component {
 
           <textarea
               cols="60"
-              rows="2"
+              rows="10"
               autoFocus="autoFocus"
               onFocus={
                 (ev) => ev.target.setSelectionRange(0, ev.target.value.length)
