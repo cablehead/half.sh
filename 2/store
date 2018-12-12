@@ -400,6 +400,10 @@ def node_run(env, node_id):
                     b'o' + node_id.to_bytes() + b'tick' +
                     Flake(tick['tick_id']).to_bytes())
 
+    except Exception:
+        log.exception('exception running %s', node_id)
+        return []
+
     finally:
         shutil.rmtree(path)
 
